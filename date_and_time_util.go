@@ -11,6 +11,8 @@ import (
 // regex to strip ordinal suffixes for date (1st, 2nd, 3rd, 4th, etc.)
 var ordinalRegex = regexp.MustCompile(`(\d+)(st|nd|rd|th)\b`)
 
+var loc, _ = time.LoadLocation("America/Montreal")
+
 var frenchMonthReplacer = strings.NewReplacer(
 	"Janvier", "January", "janvier", "January",
 	"Février", "February", "février", "February",
@@ -31,103 +33,6 @@ var frenchMonthReplacer = strings.NewReplacer(
 	"Déc", "Dec", "déc", "Dec",
 )
 
-var loc, _ = time.LoadLocation("America/Montreal")
-
-type Venue struct {
-	Name           string
-	Group          string // group related venues (multiple venues for a single website)
-	Links          []string
-	AllowedDomains []string
-	Selector       string // CSS selectors
-	Address        string
-	Neighborhood   string
-	Website        string
-}
-
-type Event struct {
-	VenueKey    string // for maps
-	Name        string
-	Venue       string
-	Date        string
-	Address     string
-	Time        string
-	Price       string
-	TicketURL   string
-	DayOfWeek   string
-	CalendarURL string
-	ICSData     string
-
-	ParsedDate time.Time
-	DaysUntil  int
-	PriceValue float64
-
-	IsFree        bool
-	IsToday       bool
-	IsThisWeekend bool
-	IsThisWeek    bool
-}
-
-func (e *Event) enrichEvent() {
-
-	e.PriceValue = parsePrice(e.Price)
-	e.IsFree = e.PriceValue == 0
-
-	parsedDate, err := parseDate(e.Date)
-	if err != nil {
-		// set defaults for date-dependent fields
-		e.ParsedDate = time.Time{}
-		e.DaysUntil = -1
-		e.DayOfWeek = ""
-		e.IsToday = false
-		e.IsThisWeekend = false
-		e.IsThisWeek = false
-
-		// log.Printf("warning: could not parse date %q for event: %v", e.Date, err)
-		return
-	}
-
-	e.ParsedDate = parsedDate
-	e.DaysUntil = daysUntil(e.ParsedDate)
-	e.DayOfWeek = e.ParsedDate.Weekday().String()
-	e.IsToday = isToday(e.ParsedDate)
-	e.IsThisWeekend = isThisWeekend(e.ParsedDate)
-	e.IsThisWeek = e.DaysUntil >= 0 && e.DaysUntil <= 7
-}
-
-func validateEvent(e Event) (missing []string) {
-	if e.Name == "" {
-		missing = append(missing, "Name")
-	}
-	if e.Venue == "" {
-		missing = append(missing, "Venue")
-	}
-	if e.ParsedDate.IsZero() {
-		missing = append(missing, "ParsedDate")
-	}
-	return missing
-}
-
-// parsePrice parses a price string to a float64 value
-func parsePrice(priceStr string) float64 {
-	priceStr = strings.ToLower(priceStr)
-	if strings.Contains(priceStr, "free") || strings.Contains(priceStr, "gratuit") {
-		return 0
-	}
-
-	re := regexp.MustCompile(`[\d.]+`)
-	match := re.FindString(priceStr)
-	if match == "" {
-		return 0
-	}
-
-	price, _ := strconv.ParseFloat(match, 64)
-	return price
-}
-
-func translateMonth(date string) string {
-	return frenchMonthReplacer.Replace(date)
-}
-
 func parseDate(date string) (time.Time, error) {
 
 	normalized := translateMonth(date)
@@ -146,6 +51,11 @@ func parseDate(date string) (time.Time, error) {
 
 		// Case quai des brumes : "10 Fév" -> needs year
 		{"2 Jan", true},
+
+		// Case Hemisphere gauche :
+		// 		get rid of day (substring from after comma)
+		//  	format date number?
+		{"Fri, Feb 06", true},
 
 		// default:
 		{"January 2, 2006", false},
@@ -178,6 +88,10 @@ func parseDate(date string) (time.Time, error) {
 		}
 	}
 	return time.Time{}, fmt.Errorf("unable to parse date: %q (normalized: %q)", date, normalized)
+}
+
+func translateMonth(date string) string {
+	return frenchMonthReplacer.Replace(date)
 }
 
 func splitDateTime(raw string) (date, eventTime string) {
@@ -251,6 +165,19 @@ func daysUntil(eventDate time.Time) int {
 	return int(eventDay.Sub(today).Hours() / 24)
 }
 
+func eventAlreadyHappened(a, b time.Time) bool {
+	// todo
+	//ad := a.Day()
+	//bd := b.Day()
+	//
+	//if ad > bd {
+	//	return true
+	//}
+	//return false
+
+	return false
+}
+
 func isSameDay(a, b time.Time) bool {
 	ay, am, ad := a.Date()
 	by, bm, bd := b.Date()
@@ -262,9 +189,7 @@ func isToday(t time.Time) bool {
 }
 
 func isThisWeek(t time.Time) bool {
-	now := time.Now()
-
-	nowYear, nowWeek := now.ISOWeek()
+	nowYear, nowWeek := time.Now().ISOWeek()
 	tYear, tWeek := t.ISOWeek()
 
 	return nowYear == tYear && nowWeek == tWeek

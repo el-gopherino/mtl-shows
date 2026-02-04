@@ -6,6 +6,33 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
+// TODO: update pour chaque nouvelle venue d'ajoutée dans venues.go
+func parseEvent(h *colly.HTMLElement, venueKey string, venue Venue) (Event, []string) {
+	var e Event
+
+	switch venueKey {
+	case "casa-del-popolo":
+		e = parseCasaDelPopolo(h)
+	case "la-sala-rossa":
+		e = parseSalaRossa(h)
+	case "la-sotterenea":
+		e = parseLaSotterenea(h)
+	case "ptit-ours":
+		e = parsePtitOurs(h)
+	case "la-toscadura":
+		e = parseLaToscadura(h)
+	case "cafe-campus":
+		e = parseCafeCampus(h)
+	case "quai-des-brumes":
+		e = parseQuaiDesBrumes(h)
+	case "hemisphere-gauche":
+		e = parseHemisphereGauche(h)
+	default:
+		e = parseGeneric(h)
+	}
+	return e, validateEvent(e)
+}
+
 func parseCasaDelPopolo(h *colly.HTMLElement) Event {
 	children := h.DOM.Children().Filter("div")
 
@@ -116,7 +143,6 @@ func parseCafeCampus(h *colly.HTMLElement) Event {
 }
 
 func parseQuaiDesBrumes(h *colly.HTMLElement) Event {
-
 	e := Event{
 		VenueKey:  "quai-des-brumes",
 		Name:      h.ChildText("h3.mec-event-title a"),
@@ -124,13 +150,29 @@ func parseQuaiDesBrumes(h *colly.HTMLElement) Event {
 		Venue:     "Quai des Brumes",
 		Address:   "4481 Rue Saint-Denis",
 		Time:      h.ChildText("span.mec-start-time"),
-		TicketURL: h.ChildAttr("a.mec-booking-button", "href"),
+		TicketURL: h.ChildAttr("a.mec-color-hover", "href"),
 	}
 
 	e.enrichEvent()
 	return e
 }
 
+func parseHemisphereGauche(h *colly.HTMLElement) Event {
+	e := Event{
+		VenueKey:  "hemisphere-gauche",
+		Name:      h.ChildText("a.WFgzOI"),
+		Date:      h.ChildText("span.GiNWmM"),
+		Venue:     "L'Hémisphere Gauche",
+		Address:   "221 Beaubien Est",
+		Time:      h.ChildText("span.GiNWmM"),
+		TicketURL: h.ChildAttr("a.DjQEyU m022zm aUkG34", "href"),
+	}
+
+	e.enrichEvent()
+	return e
+}
+
+// parseGeneric is the default for the switch case. Should never have to run.
 func parseGeneric(h *colly.HTMLElement) Event {
 	return Event{
 		Name: strings.TrimSpace(h.Text),

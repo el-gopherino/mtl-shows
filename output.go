@@ -1,12 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 )
-
-// todo: eventSaveBuilder -> do it if it makes sense
 
 func saveAllEvents(allEvents map[string][]Event) {
 
@@ -14,12 +13,12 @@ func saveAllEvents(allEvents map[string][]Event) {
 		fmt.Printf("Failed to create tonight directory: %v\n", err)
 		return
 	}
-	if err := os.MkdirAll("output", 0755); err != nil {
-		fmt.Printf("Failed to create output directory: %v\n", err)
-		return
-	}
 	if err := os.MkdirAll("this_week", 0755); err != nil {
 		fmt.Printf("Failed to create tonight directory: %v\n", err)
+		return
+	}
+	if err := os.MkdirAll("output", 0755); err != nil {
+		fmt.Printf("Failed to create output directory: %v\n", err)
 		return
 	}
 
@@ -32,20 +31,19 @@ func saveAllEvents(allEvents map[string][]Event) {
 		}
 	}
 
-	// events slice for tonight, thisWeek, etc.
-	// keep outside of loop, cuz it will output fuckall otherwise
+	// events slice for all filtered events (tonight, thisWeek, etc.)
 	var allEventsList []Event
 	for venueKey, events := range allEvents {
 		venue := allVenues[venueKey]
 
-		// Use group subdirectory if venue belongs to a group
+		// Use group subdir if venue belongs to a group (rare)
 		path := "output"
 		if venue.Group != "" {
 			path = fmt.Sprintf("output/%s", venue.Group)
 		}
 
 		saveAllEventsToTextFile(events, fmt.Sprintf("%s/%s_events.txt", path, venueKey), venue.Name)
-		saveEventsToMarkdown(events, fmt.Sprintf("%s/%s_events.md", path, venueKey), venue.Name)
+		saveAllEventsToMarkdown(events, fmt.Sprintf("%s/%s_events.md", path, venueKey), venue.Name)
 
 		allEventsList = append(allEventsList, events...)
 	}
@@ -94,7 +92,7 @@ func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
 	return os.WriteFile(filename, []byte(sb.String()), 0644)
 }
 
-func saveEventsToMarkdown(events []Event, filename, venueName string) error {
+func saveAllEventsToMarkdown(events []Event, filename, venueName string) error {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("# %s\n\n", venueName))
@@ -122,58 +120,14 @@ func saveEventsToMarkdown(events []Event, filename, venueName string) error {
 	return os.WriteFile(filename, []byte(sb.String()), 0644)
 }
 
-func saveTonightEvents(events []Event, filename string) error {
-	var sb strings.Builder
-
-	sb.WriteString(fmt.Sprintf("# Shows & Events tonight\n"))
-	sb.WriteString(fmt.Sprintf("----------------------------------------------\n\n"))
-
-	count := 0
-	for _, e := range events {
-		if isToday(e.ParsedDate) {
-			count++
-			sb.WriteString(fmt.Sprintf("Event #%d\n", count))
-			sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
-			sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
-			sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
-			sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
-			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
-			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
-			sb.WriteString(fmt.Sprintf("Tickets :  %s\n", e.TicketURL))
-
-			sb.WriteString(strings.Repeat("-", 90) + "\n")
-		}
+func saveAllEventsToJson(events []Event, fileName string) error {
+	data, err := json.MarshalIndent(events, "", "\t")
+	if err != nil {
+		return fmt.Errorf("error parsing venues to JSON: %w", err)
 	}
-
-	return os.WriteFile(filename, []byte(sb.String()), 0644)
+	return os.WriteFile(fileName, data, 0644)
 }
 
-func saveThisWeekEvents(events []Event, filename string) error { // todo: fix bug
-	var sb strings.Builder
-
-	sb.WriteString(fmt.Sprintf("# Shows & Events this week\n"))
-	sb.WriteString(fmt.Sprintf("----------------------------------------------\n\n"))
-
-	count := 0
-
-	for _, e := range events {
-		if isThisWeek(e.ParsedDate) {
-			count++
-			sb.WriteString(fmt.Sprintf("Event #%d\n", count))
-			sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
-			sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
-			sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
-			sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
-			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
-			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
-			sb.WriteString(fmt.Sprintf("Tickets :  %s\n", e.TicketURL))
-
-			sb.WriteString(strings.Repeat("-", 90) + "\n")
-		}
-	}
-
-	return os.WriteFile(filename, []byte(sb.String()), 0644)
-}
-
-// todo:
-// func saveEventsToJson
+//func saveAllEventsToHtml(events []Event, fileName string) error {
+//
+//}

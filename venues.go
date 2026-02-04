@@ -1,21 +1,31 @@
 package main
 
-// venue websites' CSS selectors for events
+type Venue struct {
+	Name           string
+	Group          string // group related venues (multiple venues for a single website)
+	Links          []string
+	AllowedDomains []string
+	Selector       string // CSS selectors
+	Address        string
+	Neighborhood   string
+	Website        string
+}
+
+// venue websites' CSS selectors and for event info and event logo
 const (
-	CasaDelPopoloSelector = "div.md\\:w-5\\/12.p-6"
-	QuaiDesBrumesSelector = "article.mec-event-article"
-	CafeCampusSelector    = "div.noo-shevent-content"
+	CasaDelPopoloSelector    = "div.md\\:w-5\\/12.p-6"
+	QuaiDesBrumesSelector    = "article.mec-event-article"
+	CafeCampusSelector       = "div.noo-shevent-content"
+	HemisphereGaucheSelector = "div.IFphb0"
 )
 
 var allVenues = map[string]Venue{
 
-	/*
-		DEBUT CASA & co
-	*/
-
+	// Debut CASA group
 	"casa-del-popolo": {
-		Name:  "Casa del Popolo",
-		Group: "casa",
+		Name:    "Casa del Popolo",
+		Address: "4873 St-Laurent",
+		Group:   "casa",
 		Links: []string{
 			"https://casadelpopolo.com/en/events/casa-del-popolo",
 		},
@@ -27,8 +37,9 @@ var allVenues = map[string]Venue{
 	},
 
 	"la-sala-rossa": {
-		Name:  "La Sala Rossa",
-		Group: "casa",
+		Name:    "La Sala Rossa",
+		Address: "4848 St-Laurent",
+		Group:   "casa",
 		Links: []string{
 			"https://casadelpopolo.com/en/events/la-sala-rossa",
 		},
@@ -40,8 +51,9 @@ var allVenues = map[string]Venue{
 	},
 
 	"la-sotterenea": {
-		Name:  "La Sotterenea",
-		Group: "casa",
+		Name:    "La Sotterenea",
+		Address: "4848 St-Laurent",
+		Group:   "casa",
 		Links: []string{
 			"https://casadelpopolo.com/en/events/la-sotterenea",
 		},
@@ -53,8 +65,9 @@ var allVenues = map[string]Venue{
 	},
 
 	"ptit-ours": {
-		Name:  "Ptit Ours",
-		Group: "casa",
+		Name:    "Ptit Ours",
+		Address: "5589 Avenue du Parc",
+		Group:   "casa",
 		Links: []string{
 			"https://casadelpopolo.com/en/events/ptit-ours",
 		},
@@ -66,8 +79,9 @@ var allVenues = map[string]Venue{
 	},
 
 	"la-toscadura": {
-		Name:  "La Toscadura",
-		Group: "casa",
+		Name:    "La Toscadura",
+		Address: "4388 St-Laurent",
+		Group:   "casa",
 		Links: []string{
 			"https://casadelpopolo.com/en/events/la-toscadura",
 		},
@@ -78,15 +92,12 @@ var allVenues = map[string]Venue{
 		Selector: CasaDelPopoloSelector,
 	},
 
-	/*
-		FIN CASA & co
-	*/
-
+	// Fin Casa group
 	// ----------------------------------------------------------------------------------------------------
 
 	"quai-des-brumes": {
 		Name:    "Quai des Brumes",
-		Address: "4481 Rue Saint-Denis, Montréal",
+		Address: "4481 Rue Saint-Denis",
 		Links: []string{
 			"https://quaidesbrumes.ca/calendrier/",
 		},
@@ -100,17 +111,29 @@ var allVenues = map[string]Venue{
 
 	"cafe-campus": {
 		Name:    "Cafe Campus",
-		Address: "57 Rue Prince-Arthur Est, Montréal",
+		Address: "57 Rue Prince-Arthur Est",
 		Links: []string{
 			"https://spectacles.cafecampus.com/evenements",
 		},
 		AllowedDomains: []string{
 			"spectacles.cafecampus.com",
 			"www.spectacles.cafecampus.com",
-			//"cafecampus.com",
-			//"www.cafecampus.com",
 		},
 		Selector: CafeCampusSelector,
 		Website:  "https://www.cafecampus.com/",
+	},
+
+	"hemisphere-gauche": {
+		Name:    "L'Hemisphere Gauche",
+		Address: "221 Beaubien Est",
+		Links: []string{
+			"https://www.hemispheregauche.com/?lang=en",
+		},
+		AllowedDomains: []string{
+			"hemispheregauche.com",
+			"www.hemispheregauche.com",
+		},
+		Selector: HemisphereGaucheSelector,
+		Website:  "https://www.hemispheregauche.com",
 	},
 }
