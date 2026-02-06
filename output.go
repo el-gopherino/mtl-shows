@@ -9,14 +9,15 @@ import (
 
 func saveAllEvents(allEvents map[string][]Event) {
 
-	if err := os.MkdirAll("tonight", 0755); err != nil {
-		fmt.Printf("Failed to create tonight directory: %v\n", err)
-		return
-	}
-	if err := os.MkdirAll("this_week", 0755); err != nil {
-		fmt.Printf("Failed to create tonight directory: %v\n", err)
-		return
-	}
+	//if err := os.MkdirAll("tonight", 0755); err != nil {
+	//	fmt.Printf("Failed to create tonight directory: %v\n", err)
+	//	return
+	//}
+	//if err := os.MkdirAll("this_week", 0755); err != nil {
+	//	fmt.Printf("Failed to create tonight directory: %v\n", err)
+	//	return
+	//}
+
 	if err := os.MkdirAll("output", 0755); err != nil {
 		fmt.Printf("Failed to create output directory: %v\n", err)
 		return
@@ -31,7 +32,6 @@ func saveAllEvents(allEvents map[string][]Event) {
 		}
 	}
 
-	// events slice for all filtered events (tonight, thisWeek, etc.)
 	var allEventsList []Event
 	for venueKey, events := range allEvents {
 		venue := allVenues[venueKey]
@@ -42,14 +42,15 @@ func saveAllEvents(allEvents map[string][]Event) {
 			path = fmt.Sprintf("output/%s", venue.Group)
 		}
 
-		saveAllEventsToTextFile(events, fmt.Sprintf("%s/%s_events.txt", path, venueKey), venue.Name)
-		saveAllEventsToMarkdown(events, fmt.Sprintf("%s/%s_events.md", path, venueKey), venue.Name)
+		saveAllEventsToTextFile(events, fmt.Sprintf("%s/%s.txt", path, venueKey), venue.Name)
+		saveAllEventsToMarkdown(events, fmt.Sprintf("%s/%s.md", path, venueKey), venue.Name)
+		saveAllEventsToJson(events, fmt.Sprintf("%s/%s.json", path, venueKey))
 
 		allEventsList = append(allEventsList, events...)
 	}
 
-	saveTonightEvents(allEventsList, "tonight/tonight_events.txt")
-	saveThisWeekEvents(allEventsList, "this_week/this_week_events.txt")
+	//saveTonightEvents(allEventsList, "tonight/tonight_events.txt")
+	//saveThisWeekEvents(allEventsList, "this_week/this_week_events.txt")
 }
 
 func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
@@ -63,29 +64,31 @@ func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
 	}
 
 	for i, e := range events {
-
 		sb.WriteString(fmt.Sprintf("Event #%d\n", i+1))
 		sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
 		sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
-		sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
 		sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
+		sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
 		sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
-		sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
+		if e.Price != "" {
+			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
+		}
 		sb.WriteString(fmt.Sprintf("Tickets :  %s\n", e.TicketURL))
 
-		sb.WriteString(fmt.Sprintf("\nMore detailed info:\n"))
+		sb.WriteString(fmt.Sprintf("\n\tDetailed\t info:\n-_-_-__-____-____\n\n"))
 
-		sb.WriteString(fmt.Sprintf("Parsed Date:       %s\n", e.ParsedDate)) // TODO: fix pour quai des brumes + voir si heure local EST est possible
-		sb.WriteString(fmt.Sprintf("Day of week:       %s\n", e.DayOfWeek))  // ✅
+		sb.WriteString(fmt.Sprintf("Parsed Date:       %s\n", e.ParsedDate))
+		sb.WriteString(fmt.Sprintf("Day of week:       %s\n", e.DayOfWeek))
 		sb.WriteString(fmt.Sprintf("\n"))
-		sb.WriteString(fmt.Sprintf("Price value:       %.2f\n", e.PriceValue)) // ✅
-		sb.WriteString(fmt.Sprintf("is free:           %t\n", e.IsFree))       // ✅
-		sb.WriteString(fmt.Sprintf("\n"))
-		sb.WriteString(fmt.Sprintf("Days Until:        %d\n", e.DaysUntil))       // ✅
-		sb.WriteString(fmt.Sprintf("is today:          %t\n", e.IsToday))         // ✅
-		sb.WriteString(fmt.Sprintf("is this week:      %t\n", e.IsThisWeek))      // ✅
-		sb.WriteString(fmt.Sprintf("is this weekend:   %t\n\n", e.IsThisWeekend)) // ✅
-
+		if e.Price != "" {
+			sb.WriteString(fmt.Sprintf("Price value:       %.2f\n", e.PriceValue))
+			sb.WriteString(fmt.Sprintf("is free:           %t\n", e.IsFree))
+			sb.WriteString(fmt.Sprintf("\n"))
+		}
+		sb.WriteString(fmt.Sprintf("Days Until:        %d\n", e.DaysUntil))
+		sb.WriteString(fmt.Sprintf("is today:          %t\n", e.IsToday))
+		sb.WriteString(fmt.Sprintf("is this week:      %t\n", e.IsThisWeek))
+		sb.WriteString(fmt.Sprintf("is this weekend:   %t\n\n", e.IsThisWeekend))
 		sb.WriteString(strings.Repeat("-", 90) + "\n\n")
 	}
 
