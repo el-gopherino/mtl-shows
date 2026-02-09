@@ -33,7 +33,7 @@ func saveAllEvents(allEvents map[string][]Event) {
 	}
 
 	var allEventsList []Event
-	for venueKey, events := range allEvents {
+	for venueKey, event := range allEvents {
 		venue := allVenues[venueKey]
 
 		// Use group subdir if venue belongs to a group (rare)
@@ -42,15 +42,15 @@ func saveAllEvents(allEvents map[string][]Event) {
 			path = fmt.Sprintf("output/%s", venue.Group)
 		}
 
-		saveAllEventsToTextFile(events, fmt.Sprintf("%s/%s.txt", path, venueKey), venue.Name)
-		saveAllEventsToMarkdown(events, fmt.Sprintf("%s/%s.md", path, venueKey), venue.Name)
-		saveAllEventsToJson(events, fmt.Sprintf("%s/%s.json", path, venueKey))
+		saveAllEventsToTextFile(event, fmt.Sprintf("%s/%s.txt", path, venueKey), venue.Name)
+		saveAllEventsToMarkdown(event, fmt.Sprintf("%s/%s.md", path, venueKey), venue.Name)
+		//saveAllEventsToJson(event, fmt.Sprintf("%s/%s.json", path, venueKey))
 
-		allEventsList = append(allEventsList, events...)
+		allEventsList = append(allEventsList, event...)
 	}
 
-	//saveTonightEvents(allEventsList, "tonight/tonight_events.txt")
-	//saveThisWeekEvents(allEventsList, "this_week/this_week_events.txt")
+	//saveTonightEvents(allEventsList, "tonight/tonight.txt")
+	//saveThisWeekEvents(allEventsList, "this_week/this_week.txt")
 }
 
 func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
@@ -75,7 +75,7 @@ func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
 		}
 		sb.WriteString(fmt.Sprintf("Tickets :  %s\n", e.TicketURL))
 
-		sb.WriteString(fmt.Sprintf("\n\tDetailed\t info:\n-_-_-__-____-____\n\n"))
+		sb.WriteString(fmt.Sprintf("\n\tDetailed\t info:\n\n"))
 
 		sb.WriteString(fmt.Sprintf("Parsed Date:       %s\n", e.ParsedDate))
 		sb.WriteString(fmt.Sprintf("Day of week:       %s\n", e.DayOfWeek))

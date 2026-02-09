@@ -5,7 +5,7 @@ type Venue struct {
 	Group          string // group related venues (multiple venues for a single website)
 	Links          []string
 	AllowedDomains []string
-	Selector       string // CSS selectors
+	Selector       string // CSS selector for events on page
 	Address        string
 	Neighborhood   string
 	Website        string
@@ -17,11 +17,12 @@ const (
 	QuaiDesBrumesSelector    = "article.mec-event-article"
 	CafeCampusSelector       = "div.noo-shevent-content"
 	HemisphereGaucheSelector = "div.IFphb0"
+	BarLeRitzPDBSelector     = "article.eventlist-event eventlist-event--upcoming eventlist-event--hasimg eventlist-hasimg is-loaded"
 )
 
 var allVenues = map[string]Venue{
 
-	// Debut CASA group
+	// --------------------------------- CASA group ---------------------------------
 	"casa-del-popolo": {
 		Name:    "Casa del Popolo",
 		Address: "4873 St-Laurent",
@@ -91,9 +92,7 @@ var allVenues = map[string]Venue{
 		},
 		Selector: CasaDelPopoloSelector,
 	},
-
-	// Fin Casa group
-	// ----------------------------------------------------------------------------------------------------
+	// ------------------------------------- Fin Casa ---------------------------------------------------------
 
 	"quai-des-brumes": {
 		Name:    "Quai des Brumes",
@@ -136,4 +135,18 @@ var allVenues = map[string]Venue{
 		Selector: HemisphereGaucheSelector,
 		Website:  "https://www.hemispheregauche.com",
 	},
+
+	//"bar-le-ritz-pdb": {
+	//	Name:    "Bar Le Ritz PDB",
+	//	Address: "179 Rue Jean-Talon Ouest",
+	//	Links: []string{
+	//		"https://www.barleritzpdb.com/",
+	//	},
+	//	AllowedDomains: []string{
+	//		"barleritzpdb.com",
+	//		"www.barleritzpdb.com",
+	//	},
+	//	Selector: BarLeRitzPDBSelector,
+	//	Website:  "https://www.barleritzpdb.com/",
+	//},
 }

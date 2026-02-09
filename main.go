@@ -34,7 +34,7 @@ func scrapeVenue(venueKey string, venue Venue) (events []Event) {
 	c.OnHTML(venue.Selector, func(h *colly.HTMLElement) {
 		event, missing := parseEvent(h, venueKey, venue)
 		if len(missing) > 0 {
-			fmt.Printf("\t[%s]: Skipping event, missing: %v\n", venueKey, strings.Join(missing, ", "))
+			fmt.Printf("\t[%s]: missing: %v\n", venueKey, strings.Join(missing, ", "))
 		}
 		events = append(events, event)
 	})

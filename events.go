@@ -1,7 +1,6 @@
 package main
 
 import (
-	"image"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,7 +19,7 @@ type Event struct {
 	DayOfWeek   string
 	CalendarURL string
 	ICSData     string
-	EventImage  *image.Image
+	EventImage  string
 
 	ParsedDate time.Time
 	DaysUntil  int
