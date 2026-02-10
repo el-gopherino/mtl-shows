@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -25,10 +26,11 @@ type Event struct {
 	DaysUntil  int
 	PriceValue float64
 
-	IsFree        bool
-	IsToday       bool
-	IsThisWeekend bool
-	IsThisWeek    bool
+	AlreadyHappened bool
+	IsFree          bool
+	IsToday         bool
+	IsThisWeekend   bool
+	IsThisWeek      bool
 }
 
 func (e *Event) enrichEvent() {
@@ -46,11 +48,12 @@ func (e *Event) enrichEvent() {
 		e.IsThisWeekend = false
 		e.IsThisWeek = false
 
-		// log.Printf("warning: could not parse date %q for event: %v", e.Date, err)
+		log.Printf("warning: could not parse date %q for event: %v", e.Date, err)
 		return
 	}
 
 	e.ParsedDate = parsedDate
+	e.AlreadyHappened = isPast(parsedDate)
 	e.DaysUntil = daysUntil(e.ParsedDate)
 	e.DayOfWeek = e.ParsedDate.Weekday().String()
 	e.IsToday = isToday(e.ParsedDate)

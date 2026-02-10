@@ -8,18 +8,6 @@ import (
 	"time"
 )
 
-//type DateFormat string
-//
-//const (
-//	ISO         DateFormat = "2024-11-30"
-//	American    DateFormat = "11/30/2024"
-//	European    DateFormat = "30/11/2024"
-//	Long        DateFormat = "November 30, 2024"
-//	LongOrdinal DateFormat = "November 30 2024"
-//	Compact     DateFormat = "20241130"
-//	Short       DateFormat = "Nov 30, 2024"
-//)
-
 var (
 	// regex to strip ordinal suffixes for date (1st, 2nd, 3rd, 4th, etc.)
 	ordinalRegex = regexp.MustCompile(`(\d+)(st|nd|rd|th)\b`)
@@ -40,8 +28,9 @@ var frenchMonthReplacer = strings.NewReplacer(
 	"Novembre", "November", "novembre", "November",
 	"Décembre", "December", "décembre", "December",
 
-	"janv", "Jan", "Janv", "Jan",
+	"janv", "Jan", "Janv", "Jan", "janv.", "Jan", "Janv.", "Jan",
 	"Fév", "Feb", "fév", "Feb", "Févr", "Feb", "févr", "Feb",
+	"Fév.", "Feb", "fév.", "Feb", "Févr.", "Feb", "févr.", "Feb",
 	"Avr", "Apr", "avr", "Apr",
 	"Juil", "Jul", "juil", "Jul",
 	"Déc", "Dec", "déc", "Dec",
@@ -59,7 +48,7 @@ var frenchDayReplacer = strings.NewReplacer(
 
 func parseDate(date string) (time.Time, error) {
 
-	normalized := translateMonth(date)
+	normalized := strings.ToLower(translateMonth(date))
 	normalized = frenchDayReplacer.Replace(normalized)
 	normalized = ordinalRegex.ReplaceAllString(normalized, "$1")
 	normalized = strings.TrimSpace(normalized)
@@ -79,7 +68,7 @@ func parseDate(date string) (time.Time, error) {
 		{"2 Jan", true},
 
 		// Case Hemisphere gauche : "sam. 07 févr"
-		{"Mon 02 Jan", true},
+		{"Mon, Jan 02", true},
 
 		// default:
 		{"January 2, 2006", false},
@@ -179,10 +168,7 @@ func inferYear(t time.Time) int {
 	now := time.Now()
 	year := now.Year()
 
-	today := time.Date(year, now.Month(), now.Day(), 0, 0, 0, 0, t.Location())
-	thisYear := time.Date(year, t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
-
-	if thisYear.Before(today) {
+	if now.Month() >= time.November && t.Month() <= time.February {
 		return year + 1
 	}
 	return year
