@@ -14,6 +14,8 @@ var (
 	loc, _       = time.LoadLocation("America/Montreal")
 )
 
+var priceRegex = regexp.MustCompile(`[\d.]+`)
+
 var frenchMonthReplacer = strings.NewReplacer(
 	"Janvier", "January", "janvier", "January",
 	"Février", "February", "février", "February",
@@ -220,4 +222,20 @@ func isThisWeekend(t time.Time) bool {
 	day := t.Weekday()
 	isWeekendDay := day == time.Friday || day == time.Saturday || day == time.Sunday
 	return isWeekendDay && isThisWeek(t)
+}
+
+// parsePrice parses a price string to a float64 value
+func parsePrice(priceStr string) float64 {
+	priceStr = strings.ToLower(priceStr)
+	if strings.Contains(priceStr, "free") || strings.Contains(priceStr, "gratuit") {
+		return 0
+	}
+
+	match := priceRegex.FindString(priceStr)
+	if match == "" {
+		return 0
+	}
+
+	price, _ := strconv.ParseFloat(match, 64)
+	return price
 }

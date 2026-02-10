@@ -32,7 +32,7 @@ func saveAllEvents(allEvents map[string][]Event) {
 		}
 	}
 
-	var allEventsList []Event
+	allEventsList := make([]Event, 0, len(allEvents)*10)
 	for venueKey, event := range allEvents {
 		venue := allVenues[venueKey]
 

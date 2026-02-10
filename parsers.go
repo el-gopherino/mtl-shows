@@ -7,7 +7,7 @@ import (
 )
 
 // TODO: update pour chaque nouvelle venue d'ajoutée dans venues.go
-func parseEvent(h *colly.HTMLElement, venueKey string, venue Venue) (Event, []string) {
+func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 	var e Event
 
 	switch venueKey {
@@ -30,7 +30,7 @@ func parseEvent(h *colly.HTMLElement, venueKey string, venue Venue) (Event, []st
 	default:
 		e = parseGeneric(h)
 	}
-	return e, validateEvent(e)
+	return e, e.validateEvent()
 }
 
 func parseCasaDelPopolo(h *colly.HTMLElement) Event {

@@ -27,12 +27,15 @@ func main() {
 
 func scrapeVenue(venueKey string, venue Venue) (events []Event) {
 
+	// preallocate events
+	events = make([]Event, 0, 20)
+
 	c := colly.NewCollector(
 		colly.AllowedDomains(venue.AllowedDomains...),
 	)
 
 	c.OnHTML(venue.Selector, func(h *colly.HTMLElement) {
-		event, missing := parseEvent(h, venueKey, venue)
+		event, missing := parseEvent(h, venueKey)
 		if event.AlreadyHappened {
 			return
 		}

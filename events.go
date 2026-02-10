@@ -2,9 +2,6 @@ package main
 
 import (
 	"log"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -61,7 +58,7 @@ func (e *Event) enrichEvent() {
 	e.IsThisWeek = e.DaysUntil >= 0 && e.DaysUntil <= 7
 }
 
-func validateEvent(e Event) (missing []string) {
+func (e *Event) validateEvent() (missing []string) {
 	if e.Name == "" {
 		missing = append(missing, "Name")
 	}
@@ -75,21 +72,4 @@ func validateEvent(e Event) (missing []string) {
 		missing = append(missing, "ParsedDate")
 	}
 	return missing
-}
-
-// parsePrice parses a price string to a float64 value
-func parsePrice(priceStr string) float64 {
-	priceStr = strings.ToLower(priceStr)
-	if strings.Contains(priceStr, "free") || strings.Contains(priceStr, "gratuit") {
-		return 0
-	}
-
-	re := regexp.MustCompile(`[\d.]+`)
-	match := re.FindString(priceStr)
-	if match == "" {
-		return 0
-	}
-
-	price, _ := strconv.ParseFloat(match, 64)
-	return price
 }

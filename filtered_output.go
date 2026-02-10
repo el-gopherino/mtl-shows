@@ -9,8 +9,8 @@ import (
 func saveTonightEvents(events []Event, filename string) error {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("# Shows & Events tonight\n"))
-	sb.WriteString(fmt.Sprintf("----------------------------------------------\n\n"))
+	sb.WriteString(fmt.Sprintln("# Shows & Events tonight"))
+	sb.WriteString(fmt.Sprintln("----------------------------------------------\n"))
 
 	count := 0
 	for _, e := range events {
@@ -35,8 +35,8 @@ func saveTonightEvents(events []Event, filename string) error {
 func saveThisWeekEvents(events []Event, filename string) error {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("# Shows & Events this week\n"))
-	sb.WriteString(fmt.Sprintf("----------------------------------------------\n\n"))
+	sb.WriteString(fmt.Sprintln("# Shows & Events this week"))
+	sb.WriteString(fmt.Sprintln("----------------------------------------------\n"))
 
 	count := 0
 	for _, e := range events {
