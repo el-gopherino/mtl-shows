@@ -17,8 +17,6 @@ func main() {
 
 		events := scrapeVenue(key, venue)
 		allEvents[key] = events
-
-		fmt.Printf("\tFound %d events\n\n", len(events))
 	}
 
 	saveAllEvents(allEvents)
@@ -26,14 +24,11 @@ func main() {
 }
 
 func scrapeVenue(venueKey string, venue Venue) (events []Event) {
-
-	// preallocate events
 	events = make([]Event, 0, 20)
 
 	c := colly.NewCollector(
 		colly.AllowedDomains(venue.AllowedDomains...),
 	)
-
 	c.OnHTML(venue.Selector, func(h *colly.HTMLElement) {
 		event, missing := parseEvent(h, venueKey)
 		if event.AlreadyHappened {
@@ -44,11 +39,9 @@ func scrapeVenue(venueKey string, venue Venue) (events []Event) {
 		}
 		events = append(events, event)
 	})
-
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Printf("Website: %s\n", r.URL.Host)
 	})
-
 	c.OnError(func(r *colly.Response, e error) {
 		fmt.Printf("Error: %s\n", e.Error())
 	})
