@@ -9,14 +9,14 @@ import (
 
 func saveAllEvents(allEvents map[string][]Event) {
 
-	//if err := os.MkdirAll("tonight", 0755); err != nil {
-	//	fmt.Printf("Failed to create tonight directory: %v\n", err)
-	//	return
-	//}
-	//if err := os.MkdirAll("this_week", 0755); err != nil {
-	//	fmt.Printf("Failed to create tonight directory: %v\n", err)
-	//	return
-	//}
+	if err := os.MkdirAll("tonight", 0755); err != nil {
+		fmt.Printf("Failed to create tonight directory: %v\n", err)
+		return
+	}
+	if err := os.MkdirAll("this_week", 0755); err != nil {
+		fmt.Printf("Failed to create tonight directory: %v\n", err)
+		return
+	}
 
 	if err := os.MkdirAll("output", 0755); err != nil {
 		fmt.Printf("Failed to create output directory: %v\n", err)
@@ -49,8 +49,8 @@ func saveAllEvents(allEvents map[string][]Event) {
 		allEventsList = append(allEventsList, event...)
 	}
 
-	//saveTonightEvents(allEventsList, "tonight/tonight.txt")
-	//saveThisWeekEvents(allEventsList, "this_week/this_week.txt")
+	saveTonightEvents(allEventsList, "tonight/tonight.txt")
+	saveThisWeekEvents(allEventsList, "this_week/this_week.txt")
 }
 
 func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
@@ -72,18 +72,21 @@ func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
 		sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
 		if e.Price != "" {
 			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
+		} else {
+			sb.WriteString(fmt.Sprintln("Price:     not available."))
 		}
-		sb.WriteString(fmt.Sprintf("Tickets :  %s\n", e.TicketURL))
+		if e.TicketURL != "" {
+			sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
+		} else {
+			sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+		}
 
-		sb.WriteString(fmt.Sprintf("\n\tDetailed\t info:\n\n"))
-
+		// ---------------------------- detailed info ------------------------------
 		sb.WriteString(fmt.Sprintf("Parsed Date:       %s\n", e.ParsedDate))
 		sb.WriteString(fmt.Sprintf("Day of week:       %s\n", e.DayOfWeek))
-		sb.WriteString(fmt.Sprintf("\n"))
 		if e.Price != "" {
 			sb.WriteString(fmt.Sprintf("Price value:       %.2f\n", e.PriceValue))
 			sb.WriteString(fmt.Sprintf("is free:           %t\n", e.IsFree))
-			sb.WriteString(fmt.Sprintf("\n"))
 		}
 		sb.WriteString(fmt.Sprintf("Days Until:        %d\n", e.DaysUntil))
 		sb.WriteString(fmt.Sprintf("is today:          %t\n", e.IsToday))
@@ -113,6 +116,8 @@ func saveAllEventsToMarkdown(events []Event, filename, venueName string) error {
 		}
 		if e.Price != "" {
 			sb.WriteString(fmt.Sprintf("- **Price:** %s\n", e.Price))
+		} else {
+			sb.WriteString(fmt.Sprintln("- **Price: not available**"))
 		}
 		if e.TicketURL != "" {
 			sb.WriteString(fmt.Sprintf("- **Tickets:** [Link here](%s)\n", e.TicketURL))
@@ -131,6 +136,7 @@ func saveAllEventsToJson(events []Event, fileName string) error {
 	return os.WriteFile(fileName, data, 0644)
 }
 
-//func saveAllEventsToHtml(events []Event, fileName string) error {
-//
-//}
+// todo: for event image parsing
+func saveAllEventsToHtml(events []Event, fileName string) error {
+	return nil
+}

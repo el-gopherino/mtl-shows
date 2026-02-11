@@ -21,6 +21,7 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 		e = parsePtitOurs(h)
 	case "la-toscadura":
 		e = parseLaToscadura(h)
+		// -------------------- fin groupe ------------------
 	case "cafe-campus":
 		e = parseCafeCampus(h)
 	case "quai-des-brumes":
@@ -30,6 +31,7 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 	default:
 		e = parseGeneric(h)
 	}
+
 	return e, e.validateEvent()
 }
 
@@ -128,6 +130,9 @@ func parseCafeCampus(h *colly.HTMLElement) Event {
 	rawDateTime := strings.TrimSpace(h.ChildText("span.sh-date"))
 	date, eventTime := splitDateTime(rawDateTime)
 
+	priceText := h.ChildText("div.sh-excerpt")
+	price := extractAdvancePrice(priceText)
+
 	e := Event{
 		VenueKey:  "cafe-campus",
 		Name:      strings.TrimSpace(h.ChildText("h4 a")),
@@ -135,6 +140,7 @@ func parseCafeCampus(h *colly.HTMLElement) Event {
 		Venue:     "Cafe Campus",
 		Address:   "57 Rue Prince-Arthur Est",
 		Time:      eventTime,
+		Price:     price,
 		TicketURL: h.ChildAttr("span.sh-address a", "href"),
 	}
 
@@ -143,6 +149,7 @@ func parseCafeCampus(h *colly.HTMLElement) Event {
 }
 
 func parseQuaiDesBrumes(h *colly.HTMLElement) Event {
+	// prices not shown on page
 	e := Event{
 		VenueKey:  "quai-des-brumes",
 		Name:      h.ChildText("h3.mec-event-title a"),

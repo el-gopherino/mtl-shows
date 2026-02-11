@@ -10,11 +10,11 @@ import (
 
 var (
 	// regex to strip ordinal suffixes for date (1st, 2nd, 3rd, 4th, etc.)
-	ordinalRegex = regexp.MustCompile(`(\d+)(st|nd|rd|th)\b`)
-	loc, _       = time.LoadLocation("America/Montreal")
+	dateOrdinalRegex = regexp.MustCompile(`(\d+)(st|nd|rd|th)\b`)
+	priceRegex       = regexp.MustCompile(`[\d.]+`)
+	timePattern      = regexp.MustCompile(`\d+h`)
+	loc, _           = time.LoadLocation("America/Montreal")
 )
-
-var priceRegex = regexp.MustCompile(`[\d.]+`)
 
 var frenchMonthReplacer = strings.NewReplacer(
 	"Janvier", "January", "janvier", "January",
@@ -52,7 +52,7 @@ func parseDate(date string) (time.Time, error) {
 
 	normalized := strings.ToLower(translateMonth(date))
 	normalized = frenchDayReplacer.Replace(normalized)
-	normalized = ordinalRegex.ReplaceAllString(normalized, "$1")
+	normalized = dateOrdinalRegex.ReplaceAllString(normalized, "$1")
 	normalized = strings.TrimSpace(normalized)
 
 	layouts := []struct {
@@ -104,7 +104,7 @@ func stripTime(normalized string) string {
 	index := strings.Index(normalized, ",")
 	if index != -1 {
 		afterComma := normalized[index+1:]
-		if strings.Contains(afterComma, "h") || strings.Contains(afterComma, ":") {
+		if timePattern.MatchString(afterComma) || strings.Contains(afterComma, ":") {
 			return strings.TrimSpace(normalized[:index])
 		}
 	}
@@ -189,17 +189,6 @@ func isPast(t time.Time) bool {
 	return daysUntil(t) < 0
 }
 
-func eventAlreadyHappened(a, b time.Time) bool {
-	ad := a.Day()
-	bd := b.Day()
-
-	if ad > bd {
-		return true
-	}
-	return false
-
-}
-
 func isSameDay(a, b time.Time) bool {
 	ay, am, ad := a.Date()
 	by, bm, bd := b.Date()
@@ -238,4 +227,16 @@ func parsePrice(priceStr string) float64 {
 
 	price, _ := strconv.ParseFloat(match, 64)
 	return price
+}
+
+// special case for Cafe Campus
+func extractAdvancePrice(text string) string {
+
+	if idx := strings.Index(text, "Prix des billets :"); idx != -1 {
+		after := text[idx+len("Prix des billets :"):]
+		if end := strings.Index(after, "$"); end != -1 {
+			return strings.TrimSpace(after[:end+1])
+		}
+	}
+	return ""
 }
