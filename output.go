@@ -49,7 +49,6 @@ func saveAllEvents(allEvents map[string][]Event) {
 
 		saveAllEventsToTextFile(event, fmt.Sprintf("%s/%s.txt", path, venueKey), venue.Name)
 		saveAllEventsToMarkdown(event, fmt.Sprintf("%s/%s.md", path, venueKey), venue.Name)
-		//saveAllEventsToJson(event, fmt.Sprintf("%s/%s.json", path, venueKey))
 
 		allEventsList = append(allEventsList, event...)
 	}
@@ -75,7 +74,6 @@ func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
 		sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
 		sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
 		sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
-		sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
 		if e.Time != "" {
 			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
 		} else {

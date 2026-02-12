@@ -74,6 +74,7 @@ func scrapeTurboHausJSON() []Event {
 		events = append(events, e)
 	}
 
+	fmt.Printf("Scraping for Turbo Haus finished.\n")
 	return events
 }
 

@@ -21,7 +21,6 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 		e = parsePtitOurs(h)
 	case "la-toscadura":
 		e = parseLaToscadura(h)
-		// -------------------- fin groupe ------------------
 	case "cafe-campus":
 		e = parseCafeCampus(h)
 	case "quai-des-brumes":
