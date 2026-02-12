@@ -1,8 +1,10 @@
 .DS_Store
 
+mtl-shows
 /.idea
 *.iml
 TODOs.md
+UTIL_DOC.md
 
 *.out
 

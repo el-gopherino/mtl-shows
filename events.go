@@ -2,27 +2,26 @@ package main
 
 import (
 	"log"
+	"sort"
 	"time"
 )
 
 type Event struct {
-	VenueKey    string // for maps
-	Name        string
-	Venue       string
-	Date        string
-	Address     string
-	Time        string
-	Price       string
-	TicketURL   string
-	DayOfWeek   string
-	CalendarURL string
-	ICSData     string
-	EventImage  string
-
-	ParsedDate time.Time
-	DaysUntil  int
-	PriceValue float64
-
+	VenueKey        string // for maps
+	Name            string
+	Venue           string
+	Date            string
+	Address         string
+	Time            string
+	Price           string
+	TicketURL       string
+	DayOfWeek       string
+	CalendarURL     string
+	ICSData         string
+	EventImage      string
+	ParsedDate      time.Time
+	DaysUntil       int
+	PriceValue      float64
 	AlreadyHappened bool
 	IsFree          bool
 	IsToday         bool
@@ -75,4 +74,78 @@ func (e *Event) validateEvent() (missing []string) {
 		missing = append(missing, "ParsedDate")
 	}
 	return missing
+}
+
+// EventList implements sort.Interface
+type EventList []Event
+
+func (el EventList) Len() int      { return len(el) }
+func (el EventList) Swap(i, j int) { el[i], el[j] = el[j], el[i] }
+
+// Less defaults to sort by date (soonest first)
+func (el EventList) Less(i, j int) bool {
+	return el[i].ParsedDate.Before(el[j].ParsedDate)
+}
+
+func (el EventList) SortByDate() {
+	sort.Stable(el)
+}
+
+func (el EventList) Tonight() EventList {
+	var result EventList
+	for _, e := range el {
+		if e.IsToday {
+			result = append(result, e)
+		}
+	}
+	return result
+}
+
+func (el EventList) ThisWeek() EventList {
+	var result EventList
+	for _, e := range el {
+		if e.IsThisWeek {
+			result = append(result, e)
+		}
+	}
+	return result
+}
+
+func (el EventList) ThisWeekend() EventList {
+	var result EventList
+	for _, e := range el {
+		if e.IsThisWeekend {
+			result = append(result, e)
+		}
+	}
+	return result
+}
+
+// SortByPrice sorts events by price (cheapest to most expensive) -> maybe use it, since venues don't always show price
+func (el EventList) SortByPrice() {
+	sort.SliceStable(el, func(i, j int) bool {
+		return el[i].PriceValue < el[j].PriceValue
+	})
+}
+
+// Free returns events that are free (no money)
+func (el EventList) Free() EventList {
+	var result EventList
+	for _, e := range el {
+		if e.IsFree {
+			result = append(result, e)
+		}
+	}
+	return result
+}
+
+// ByDay return events by the specified day in the day argument
+func (el EventList) ByDay(day time.Weekday) EventList {
+	var result EventList
+	for _, e := range el {
+		if e.ParsedDate.Weekday() == day {
+			result = append(result, e)
+		}
+	}
+	return result
 }

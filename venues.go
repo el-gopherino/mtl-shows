@@ -2,7 +2,7 @@ package main
 
 type Venue struct {
 	Name           string
-	Group          string // group related venues (multiple venues for a single website)
+	Group          string // group related venues (multiple venues for a single website) this is rare
 	Links          []string
 	AllowedDomains []string
 	Selector       string // CSS selector for events on page
@@ -11,22 +11,21 @@ type Venue struct {
 	Website        string
 }
 
-// venue websites' CSS selectors for event info and event logo
+// venue websites' CSS selectors for colly scraper -> event info and event logo
 const (
 	CasaDelPopoloSelector    = "div.md\\:w-5\\/12.p-6"
 	QuaiDesBrumesSelector    = "article.mec-event-article"
 	CafeCampusSelector       = "div.noo-shevent-content"
 	HemisphereGaucheSelector = "div.IFphb0"
+	VerreBouteilleSelector   = "div.card-container"
 )
 
-// URLs for JS-rendered websites
+// venue URLs for Squarespace powered venues (use JSON unmarshaling)
 const (
 	TurboHausURL = "https://www.turbohaus.ca/calendrier?format=json"
 )
 
 var allVenues = map[string]Venue{
-
-	// --------------------------------- CASA group ---------------------------------
 	"casa-del-popolo": {
 		Name:    "Casa del Popolo",
 		Address: "4873 St-Laurent",
@@ -96,7 +95,6 @@ var allVenues = map[string]Venue{
 		},
 		Selector: CasaDelPopoloSelector,
 	},
-	// ------------------------------------- Fin Casa ---------------------------------------------------------
 
 	"quai-des-brumes": {
 		Name:    "Quai des Brumes",
@@ -140,6 +138,21 @@ var allVenues = map[string]Venue{
 		Website:  "https://www.hemispheregauche.com",
 	},
 
+	"verre-bouteille": {
+		Name:    "Le Verre Bouteille",
+		Address: "2112 Avenue du Mont-Royal Est",
+		Links: []string{
+			"https://verrebouteille.com/shows.php",
+		},
+		AllowedDomains: []string{
+			"verrebouteille.com",
+			"www.verrebouteille.com",
+		},
+		Selector: VerreBouteilleSelector,
+		Website:  "https://verrebouteille.com",
+	},
+
+	// JS-rendered
 	"turbo-haus": {
 		Name:    "Turbo Haüs",
 		Address: "2040 Rue Saint-Denis",

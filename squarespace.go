@@ -33,7 +33,7 @@ type squarespaceLocation struct {
 	AddressCountry string `json:"addressCountry"`
 }
 
-func scrapeTurboHausJSON() []Event {
+func scrapeTurboHausJSON() EventList {
 	url := TurboHausURL
 
 	client := &http.Client{Timeout: 15 * time.Second}
@@ -65,7 +65,7 @@ func scrapeTurboHausJSON() []Event {
 	// Merge them and deduplicate by URL.
 	allItems := mergeSquarespaceItems(sqResp)
 
-	events := make([]Event, 0, len(allItems))
+	events := make(EventList, 0, len(allItems))
 	for _, item := range allItems {
 		e := convertSquarespaceItem(item)
 		if e.AlreadyHappened {

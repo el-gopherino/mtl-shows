@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func saveAllEvents(allEvents map[string][]Event) {
+func saveAllEvents(allEvents map[string]EventList) {
 
 	if err := os.MkdirAll("tonight", 0755); err != nil {
 		fmt.Printf("Failed to create tonight directory: %v\n", err)
@@ -37,7 +37,7 @@ func saveAllEvents(allEvents map[string][]Event) {
 		}
 	}
 
-	allEventsList := make([]Event, 0, len(allEvents)*10)
+	var allEventsList EventList
 	for venueKey, event := range allEvents {
 		venue := allVenues[venueKey]
 
@@ -53,12 +53,14 @@ func saveAllEvents(allEvents map[string][]Event) {
 		allEventsList = append(allEventsList, event...)
 	}
 
-	saveTonightEvents(allEventsList, "tonight/tonight.txt")
-	saveThisWeekEvents(allEventsList, "this_week/this_week.txt")
-	saveThisWeekendEvents(allEventsList, "this_weekend/this_weekend.txt")
+	allEventsList.SortByDate()
+
+	saveTonightEvents(allEventsList.Tonight(), "tonight/tonight.txt")
+	saveThisWeekEvents(allEventsList.ThisWeek(), "this_week/this_week.txt")
+	saveThisWeekendEvents(allEventsList.ThisWeekend(), "this_weekend/this_weekend.txt")
 }
 
-func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
+func saveAllEventsToTextFile(events EventList, filename, venueName string) error {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("%s Events\n", venueName))
@@ -107,7 +109,7 @@ func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
 	return os.WriteFile(filename, []byte(sb.String()), 0644)
 }
 
-func saveAllEventsToMarkdown(events []Event, filename, venueName string) error {
+func saveAllEventsToMarkdown(events EventList, filename, venueName string) error {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("# %s\n\n", venueName))
@@ -137,7 +139,7 @@ func saveAllEventsToMarkdown(events []Event, filename, venueName string) error {
 	return os.WriteFile(filename, []byte(sb.String()), 0644)
 }
 
-func saveAllEventsToJson(events []Event, fileName string) error {
+func saveAllEventsToJson(events EventList, fileName string) error {
 	data, err := json.MarshalIndent(events, "", "\t")
 	if err != nil {
 		return fmt.Errorf("error parsing venues to JSON: %w", err)
@@ -145,12 +147,7 @@ func saveAllEventsToJson(events []Event, fileName string) error {
 	return os.WriteFile(fileName, data, 0644)
 }
 
-// todo: for event image parsing
-func saveAllEventsToHtml(events []Event, fileName string) error {
-	return nil
-}
-
-func saveTonightEvents(events []Event, filename string) error {
+func saveTonightEvents(events EventList, filename string) error {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintln("# Shows & Events tonight"))
@@ -158,36 +155,35 @@ func saveTonightEvents(events []Event, filename string) error {
 
 	count := 0
 	for _, e := range events {
-		if isToday(e.ParsedDate) {
-			count++
-			sb.WriteString(fmt.Sprintf("Event #%d\n", count))
-			sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
-			sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
-			sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
-			sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
-			if e.Time != "" {
-				sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
-			} else {
-				sb.WriteString(fmt.Sprintln("Time:      not available"))
-			}
-			if e.Price != "" {
-				sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
-			} else {
-				sb.WriteString(fmt.Sprintln("Price:     not available"))
-			}
-			if e.TicketURL != "" {
-				sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
-			} else {
-				sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
-			}
-			sb.WriteString(strings.Repeat("-", 90) + "\n\n")
+		count++
+		sb.WriteString(fmt.Sprintf("Event #%d\n", count))
+		sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
+		sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
+		sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
+		sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
+		if e.Time != "" {
+			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
+		} else {
+			sb.WriteString(fmt.Sprintln("Time:      not available"))
 		}
+		if e.Price != "" {
+			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
+		} else {
+			sb.WriteString(fmt.Sprintln("Price:     not available"))
+		}
+		if e.TicketURL != "" {
+			sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
+		} else {
+			sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+		}
+		sb.WriteString(strings.Repeat("-", 90) + "\n\n")
+
 	}
 
 	return os.WriteFile(filename, []byte(sb.String()), 0644)
 }
 
-func saveThisWeekEvents(events []Event, filename string) error {
+func saveThisWeekEvents(events EventList, filename string) error {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintln("# Shows & Events this week"))
@@ -195,36 +191,35 @@ func saveThisWeekEvents(events []Event, filename string) error {
 
 	count := 0
 	for _, e := range events {
-		if isThisWeek(e.ParsedDate) {
-			count++
-			sb.WriteString(fmt.Sprintf("Event #%d\n", count))
-			sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
-			sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
-			sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
-			sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
-			if e.Time != "" {
-				sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
-			} else {
-				sb.WriteString(fmt.Sprintln("Time:      not available"))
-			}
-			if e.Price != "" {
-				sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
-			} else {
-				sb.WriteString(fmt.Sprintln("Price:     not available"))
-			}
-			if e.TicketURL != "" {
-				sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
-			} else {
-				sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
-			}
-			sb.WriteString(strings.Repeat("-", 90) + "\n\n")
+		count++
+		sb.WriteString(fmt.Sprintf("Event #%d\n", count))
+		sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
+		sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
+		sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
+		sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
+		if e.Time != "" {
+			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
+		} else {
+			sb.WriteString(fmt.Sprintln("Time:      not available"))
 		}
+		if e.Price != "" {
+			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
+		} else {
+			sb.WriteString(fmt.Sprintln("Price:     not available"))
+		}
+		if e.TicketURL != "" {
+			sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
+		} else {
+			sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+		}
+		sb.WriteString(strings.Repeat("-", 90) + "\n\n")
+
 	}
 
 	return os.WriteFile(filename, []byte(sb.String()), 0644)
 }
 
-func saveThisWeekendEvents(events []Event, filename string) error {
+func saveThisWeekendEvents(events EventList, filename string) error {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintln("# Shows & Events this weekend"))
@@ -232,30 +227,28 @@ func saveThisWeekendEvents(events []Event, filename string) error {
 
 	count := 0
 	for _, e := range events {
-		if isThisWeekend(e.ParsedDate) {
-			count++
-			sb.WriteString(fmt.Sprintf("Event #%d\n", count))
-			sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
-			sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
-			sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
-			sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
-			if e.Time != "" {
-				sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
-			} else {
-				sb.WriteString(fmt.Sprintln("Time:      not available"))
-			}
-			if e.Price != "" {
-				sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
-			} else {
-				sb.WriteString(fmt.Sprintln("Price:     not available"))
-			}
-			if e.TicketURL != "" {
-				sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
-			} else {
-				sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
-			}
-			sb.WriteString(strings.Repeat("-", 90) + "\n\n")
+		count++
+		sb.WriteString(fmt.Sprintf("Event #%d\n", count))
+		sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
+		sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
+		sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
+		sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
+		if e.Time != "" {
+			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
+		} else {
+			sb.WriteString(fmt.Sprintln("Time:      not available"))
 		}
+		if e.Price != "" {
+			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
+		} else {
+			sb.WriteString(fmt.Sprintln("Price:     not available"))
+		}
+		if e.TicketURL != "" {
+			sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
+		} else {
+			sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+		}
+		sb.WriteString(strings.Repeat("-", 90) + "\n\n")
 	}
 
 	return os.WriteFile(filename, []byte(sb.String()), 0644)

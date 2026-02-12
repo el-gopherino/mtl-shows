@@ -10,10 +10,11 @@ import (
 
 var (
 	// regex to strip ordinal suffixes for date (1st, 2nd, 3rd, 4th, etc.)
-	dateOrdinalRegex = regexp.MustCompile(`(\d+)(st|nd|rd|th)\b`)
-	priceRegex       = regexp.MustCompile(`[\d.]+`)
-	timePattern      = regexp.MustCompile(`\d+h`)
-	loc, _           = time.LoadLocation("America/Montreal")
+	dateOrdinalRegex   = regexp.MustCompile(`(\d+)(st|nd|rd|th)\b`)
+	priceRegex         = regexp.MustCompile(`[\d.]+`)
+	backgroundURLRegex = regexp.MustCompile(`url\(["']?(.*?)["']?\)`)
+	timePattern        = regexp.MustCompile(`\d+h`)
+	loc, _             = time.LoadLocation("America/Montreal")
 )
 
 var frenchMonthReplacer = strings.NewReplacer(
@@ -65,6 +66,9 @@ func parseDate(date string) (time.Time, error) {
 		// Case Cafe campus: "30 janvier 2026, 20h"
 		// date needs to be stripped and date needs to be translated
 		{"2 January 2006", false},
+
+		// Case Verre Bouteille: "12 Février" → normalized to "12 february"
+		{"2 January", true},
 
 		// Case quai des brumes : "10 Fév"
 		{"2 Jan", true},
@@ -237,6 +241,14 @@ func extractAdvancePrice(text string) string {
 		if end := strings.Index(after, "$"); end != -1 {
 			return strings.TrimSpace(after[:end+1])
 		}
+	}
+	return ""
+}
+
+func extractBackgroundURL(style string) string {
+	matches := backgroundURLRegex.FindStringSubmatch(style)
+	if len(matches) > 1 {
+		return matches[1]
 	}
 	return ""
 }

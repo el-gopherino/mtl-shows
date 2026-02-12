@@ -27,6 +27,8 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 		e = parseQuaiDesBrumes(h)
 	case "hemisphere-gauche":
 		e = parseHemisphereGauche(h)
+	case "verre-bouteille":
+		e = parseVerreBouteille(h)
 	default:
 		e = parseGeneric(h)
 	}
@@ -172,6 +174,44 @@ func parseHemisphereGauche(h *colly.HTMLElement) Event {
 		Address:  "221 Beaubien Est",
 		// skipping time for this one
 		TicketURL: h.ChildAttr("a.DjQEyU m022zm aUkG34", "href"),
+	}
+
+	e.enrichEvent()
+	return e
+}
+
+func parseVerreBouteille(h *colly.HTMLElement) Event {
+	name := strings.TrimSpace(h.ChildText("h3.card-title"))
+
+	// Date string: "12 Février à 20h"
+	// The date h3 is inside card-content but has no class — it's the second h3
+	rawDateTime := strings.TrimSpace(h.ChildText("div.card-content h3"))
+
+	date, eventTime := "", ""
+	if strings.Contains(rawDateTime, " à ") {
+		parts := strings.SplitN(rawDateTime, " à ", 2)
+		date = strings.TrimSpace(parts[0])
+		eventTime = convertFrenchTime(strings.TrimSpace(parts[1]))
+	} else {
+		date = rawDateTime
+	}
+
+	// Ticket URL from any link to showInfo.php
+	ticketURL := h.ChildAttr("a[href*='showInfo']", "href")
+
+	// Event image is in the inline style: background: url("https://...")
+	imageStyle := h.ChildAttr("div.card", "style")
+	eventImage := extractBackgroundURL(imageStyle)
+
+	e := Event{
+		VenueKey:   "verre-bouteille",
+		Name:       name,
+		Venue:      "Le Verre Bouteille",
+		Address:    "2112 Avenue du Mont-Royal Est",
+		Date:       date,
+		Time:       eventTime,
+		TicketURL:  ticketURL,
+		EventImage: eventImage,
 	}
 
 	e.enrichEvent()
