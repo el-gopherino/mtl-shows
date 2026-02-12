@@ -39,9 +39,6 @@ func scrapeVenue(venueKey string, venue Venue) (events []Event) {
 		}
 		events = append(events, event)
 	})
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Printf("Website: %s\n", r.URL.Host)
-	})
 	c.OnError(func(r *colly.Response, e error) {
 		fmt.Printf("Error: %s\n", e.Error())
 	})

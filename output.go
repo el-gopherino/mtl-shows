@@ -70,6 +70,11 @@ func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
 		sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
 		sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
 		sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
+		if e.Time != "" {
+			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
+		} else {
+			sb.WriteString(fmt.Sprintln("Time:      not available"))
+		}
 		if e.Price != "" {
 			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
 		} else {
@@ -156,7 +161,11 @@ func saveTonightEvents(events []Event, filename string) error {
 			sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
 			sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
 			sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
-			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
+			if e.Time != "" {
+				sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
+			} else {
+				sb.WriteString(fmt.Sprintln("Time:      not available"))
+			}
 			if e.Price != "" {
 				sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
 			} else {
@@ -189,7 +198,11 @@ func saveThisWeekEvents(events []Event, filename string) error {
 			sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
 			sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
 			sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
-			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
+			if e.Time != "" {
+				sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
+			} else {
+				sb.WriteString(fmt.Sprintln("Time:      not available"))
+			}
 			if e.Price != "" {
 				sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
 			} else {

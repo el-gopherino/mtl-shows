@@ -68,6 +68,9 @@ func (e *Event) validateEvent() (missing []string) {
 	if e.PriceValue == 0 {
 		missing = append(missing, "Price Value")
 	}
+	if e.Time == "" {
+		missing = append(missing, "Time")
+	}
 	if e.ParsedDate.IsZero() {
 		missing = append(missing, "ParsedDate")
 	}

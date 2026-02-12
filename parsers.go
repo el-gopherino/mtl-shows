@@ -166,12 +166,13 @@ func parseQuaiDesBrumes(h *colly.HTMLElement) Event {
 
 func parseHemisphereGauche(h *colly.HTMLElement) Event {
 	e := Event{
-		VenueKey:  "hemisphere-gauche",
-		Name:      h.ChildText("a.WFgzOI"),
-		Date:      h.ChildText("span.GiNWmM"),
-		Venue:     "L'Hémisphere Gauche",
-		Address:   "221 Beaubien Est",
-		Time:      h.ChildText("span.GiNWmM"),
+		VenueKey: "hemisphere-gauche",
+		Name:     h.ChildText("a.WFgzOI"),
+		Date:     h.ChildText("span.GiNWmM"),
+		Venue:    "L'Hémisphere Gauche",
+		Address:  "221 Beaubien Est",
+		// skipping time for this one
+		// Time:      h.ChildText("span.GiNWmM"),
 		TicketURL: h.ChildAttr("a.DjQEyU m022zm aUkG34", "href"),
 	}
 
