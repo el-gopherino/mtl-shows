@@ -26,7 +26,7 @@ func main() {
 	}
 
 	saveAllEvents(allEvents)
-	fmt.Println("runtime duration: ", time.Since(now))
+	fmt.Println("\nruntime duration: ", time.Since(now))
 }
 
 func scrapeVenue(venueKey string, venue Venue) (events []Event) {

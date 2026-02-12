@@ -18,6 +18,11 @@ func saveAllEvents(allEvents map[string][]Event) {
 		return
 	}
 
+	if err := os.MkdirAll("this_weekend", 0755); err != nil {
+		fmt.Printf("Failed to create tonight directory: %v\n", err)
+		return
+	}
+
 	if err := os.MkdirAll("output", 0755); err != nil {
 		fmt.Printf("Failed to create output directory: %v\n", err)
 		return
@@ -51,6 +56,7 @@ func saveAllEvents(allEvents map[string][]Event) {
 
 	saveTonightEvents(allEventsList, "tonight/tonight.txt")
 	saveThisWeekEvents(allEventsList, "this_week/this_week.txt")
+	saveThisWeekendEvents(allEventsList, "this_weekend/this_weekend.txt")
 }
 
 func saveAllEventsToTextFile(events []Event, filename, venueName string) error {
@@ -192,6 +198,43 @@ func saveThisWeekEvents(events []Event, filename string) error {
 	count := 0
 	for _, e := range events {
 		if isThisWeek(e.ParsedDate) {
+			count++
+			sb.WriteString(fmt.Sprintf("Event #%d\n", count))
+			sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
+			sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
+			sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
+			sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
+			if e.Time != "" {
+				sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
+			} else {
+				sb.WriteString(fmt.Sprintln("Time:      not available"))
+			}
+			if e.Price != "" {
+				sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
+			} else {
+				sb.WriteString(fmt.Sprintln("Price:     not available"))
+			}
+			if e.TicketURL != "" {
+				sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
+			} else {
+				sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+			}
+			sb.WriteString(strings.Repeat("-", 90) + "\n\n")
+		}
+	}
+
+	return os.WriteFile(filename, []byte(sb.String()), 0644)
+}
+
+func saveThisWeekendEvents(events []Event, filename string) error {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintln("# Shows & Events this weekend"))
+	sb.WriteString(fmt.Sprintln("----------------------------------------------\n"))
+
+	count := 0
+	for _, e := range events {
+		if isThisWeekend(e.ParsedDate) {
 			count++
 			sb.WriteString(fmt.Sprintf("Event #%d\n", count))
 			sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
