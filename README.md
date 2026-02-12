@@ -1,4 +1,19 @@
 # mtl-shows
 
-- Scrapes and outputs information about "underground" shows in Montreal that are more underground (aka not MTelus or Bell Centre).
-- Uses colly (goated web crawler) to fetch the venues websites' information.
+- Scrapes and outputs information about "underground" shows in Montreal (smaller venues).
+
+
+### HTML - colly:
+- Casa del Popolo Group:
+  - Casa del Popolo
+  - La Sala Rossa
+  - La Sotterenea
+  - Ptit Ours
+  - La Toscadura
+
+- Quai des Brumes
+- Cafe Campus
+- Hemisphere Gauche
+
+### JSON - Squarespace
+- Turbo Haüs

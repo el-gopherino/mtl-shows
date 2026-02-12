@@ -172,7 +172,6 @@ func parseHemisphereGauche(h *colly.HTMLElement) Event {
 		Venue:    "L'Hémisphere Gauche",
 		Address:  "221 Beaubien Est",
 		// skipping time for this one
-		// Time:      h.ChildText("span.GiNWmM"),
 		TicketURL: h.ChildAttr("a.DjQEyU m022zm aUkG34", "href"),
 	}
 

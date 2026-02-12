@@ -11,13 +11,17 @@ type Venue struct {
 	Website        string
 }
 
-// venue websites' CSS selectors and for event info and event logo
+// venue websites' CSS selectors for event info and event logo
 const (
 	CasaDelPopoloSelector    = "div.md\\:w-5\\/12.p-6"
 	QuaiDesBrumesSelector    = "article.mec-event-article"
 	CafeCampusSelector       = "div.noo-shevent-content"
 	HemisphereGaucheSelector = "div.IFphb0"
-	BarLeRitzPDBSelector     = "article.eventlist-event eventlist-event--upcoming eventlist-event--hasimg eventlist-hasimg is-loaded"
+)
+
+// URLs for JS-rendered websites
+const (
+	TurboHausURL = "https://www.turbohaus.ca/calendrier?format=json"
 )
 
 var allVenues = map[string]Venue{
@@ -26,7 +30,7 @@ var allVenues = map[string]Venue{
 	"casa-del-popolo": {
 		Name:    "Casa del Popolo",
 		Address: "4873 St-Laurent",
-		Group:   "casa",
+		Group:   "casa-del-popolo-group",
 		Links: []string{
 			"https://casadelpopolo.com/en/events/casa-del-popolo",
 		},
@@ -40,7 +44,7 @@ var allVenues = map[string]Venue{
 	"la-sala-rossa": {
 		Name:    "La Sala Rossa",
 		Address: "4848 St-Laurent",
-		Group:   "casa",
+		Group:   "casa-del-popolo-group",
 		Links: []string{
 			"https://casadelpopolo.com/en/events/la-sala-rossa",
 		},
@@ -54,7 +58,7 @@ var allVenues = map[string]Venue{
 	"la-sotterenea": {
 		Name:    "La Sotterenea",
 		Address: "4848 St-Laurent",
-		Group:   "casa",
+		Group:   "casa-del-popolo-group",
 		Links: []string{
 			"https://casadelpopolo.com/en/events/la-sotterenea",
 		},
@@ -68,7 +72,7 @@ var allVenues = map[string]Venue{
 	"ptit-ours": {
 		Name:    "Ptit Ours",
 		Address: "5589 Avenue du Parc",
-		Group:   "casa",
+		Group:   "casa-del-popolo-group",
 		Links: []string{
 			"https://casadelpopolo.com/en/events/ptit-ours",
 		},
@@ -82,7 +86,7 @@ var allVenues = map[string]Venue{
 	"la-toscadura": {
 		Name:    "La Toscadura",
 		Address: "4388 St-Laurent",
-		Group:   "casa",
+		Group:   "casa-del-popolo-group",
 		Links: []string{
 			"https://casadelpopolo.com/en/events/la-toscadura",
 		},
@@ -136,17 +140,17 @@ var allVenues = map[string]Venue{
 		Website:  "https://www.hemispheregauche.com",
 	},
 
-	//"bar-le-ritz-pdb": {
-	//	Name:    "Bar Le Ritz PDB",
-	//	Address: "179 Rue Jean-Talon Ouest",
-	//	Links: []string{
-	//		"https://www.barleritzpdb.com/",
-	//	},
-	//	AllowedDomains: []string{
-	//		"barleritzpdb.com",
-	//		"www.barleritzpdb.com",
-	//	},
-	//	Selector: BarLeRitzPDBSelector,
-	//	Website:  "https://www.barleritzpdb.com/",
-	//},
+	"turbo-haus": {
+		Name:    "Turbo Haüs",
+		Address: "2040 Rue Saint-Denis",
+		Links: []string{
+			"https://www.turbohaus.ca/cal",
+		},
+		AllowedDomains: []string{
+			"turbohaus.ca",
+			"www.turbohaus.ca",
+		},
+		// no Selector - parse JSON
+		Website: "https://www.turbohaus.ca",
+	},
 }

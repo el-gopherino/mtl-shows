@@ -15,7 +15,13 @@ func main() {
 	for key, venue := range allVenues {
 		fmt.Printf("Scraping %s...\n", venue.Name)
 
-		events := scrapeVenue(key, venue)
+		var events []Event
+		if key == "turbo-haus" {
+			events = scrapeTurboHausJSON()
+		} else {
+			events = scrapeVenue(key, venue)
+		}
+
 		allEvents[key] = events
 	}
 
