@@ -9,6 +9,11 @@ import (
 
 func saveAllEvents(allEvents map[string]EventList) {
 
+	if err := os.MkdirAll("right_now", 0755); err != nil {
+		fmt.Printf("Failed to create tonight directory: %v\n", err)
+		return
+	}
+
 	if err := os.MkdirAll("tonight", 0755); err != nil {
 		fmt.Printf("Failed to create tonight directory: %v\n", err)
 		return
@@ -49,12 +54,13 @@ func saveAllEvents(allEvents map[string]EventList) {
 
 		saveAllEventsToTextFile(event, fmt.Sprintf("%s/%s.txt", path, venueKey), venue.Name)
 		saveAllEventsToMarkdown(event, fmt.Sprintf("%s/%s.md", path, venueKey), venue.Name)
+		saveAllEventsToJson(event, fmt.Sprintf("%s/%s.txt", path, venueKey))
 
 		allEventsList = append(allEventsList, event...)
 	}
-
 	allEventsList.SortByDate()
 
+	saveHappeningRightNowEvents(allEventsList.RightNow(), "right_now/right_now.txt")
 	saveTonightEvents(allEventsList.Tonight(), "tonight/tonight.txt")
 	saveThisWeekEvents(allEventsList.ThisWeek(), "this_week/this_week.txt")
 	saveThisWeekendEvents(allEventsList.ThisWeekend(), "this_weekend/this_weekend.txt")
@@ -145,6 +151,44 @@ func saveAllEventsToJson(events EventList, fileName string) error {
 		return fmt.Errorf("error parsing venues to JSON: %w", err)
 	}
 	return os.WriteFile(fileName, data, 0644)
+}
+
+// -------------------------------------FILTERED---------------------------------------------------
+
+func saveHappeningRightNowEvents(events EventList, filename string) error {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintln("# Shows & Events RIGHT NOW"))
+	sb.WriteString(fmt.Sprintln("----------------------------------------------\n"))
+
+	count := 0
+	for _, e := range events {
+		count++
+		sb.WriteString(fmt.Sprintf("Event #%d\n", count))
+		sb.WriteString(fmt.Sprintf("Name:      %s\n", e.Name))
+		sb.WriteString(fmt.Sprintf("Venue:     %s\n", e.Venue))
+		sb.WriteString(fmt.Sprintf("Date:      %s\n", e.Date))
+		sb.WriteString(fmt.Sprintf("Address:   %s\n", e.Address))
+		if e.Time != "" {
+			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
+		} else {
+			sb.WriteString(fmt.Sprintln("Time:      not available"))
+		}
+		if e.Price != "" {
+			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
+		} else {
+			sb.WriteString(fmt.Sprintln("Price:     not available"))
+		}
+		if e.TicketURL != "" {
+			sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
+		} else {
+			sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+		}
+		sb.WriteString(strings.Repeat("-", 90) + "\n\n")
+
+	}
+
+	return os.WriteFile(filename, []byte(sb.String()), 0644)
 }
 
 func saveTonightEvents(events EventList, filename string) error {

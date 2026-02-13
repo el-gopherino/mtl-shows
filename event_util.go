@@ -132,6 +132,27 @@ func splitDateTime(raw string) (date, eventTime string) {
 	return strings.TrimSpace(raw), ""
 }
 
+func combineDateAndTime(date time.Time, timeStr string) time.Time {
+	if date.IsZero() || timeStr == "" {
+		return time.Time{}
+	}
+
+	// Try common formats your parsers produce
+	formats := []string{"15:04", "3:04 PM", "3PM", "3 PM"}
+
+	for _, format := range formats {
+		t, err := time.Parse(format, timeStr)
+		if err == nil {
+			return time.Date(
+				date.Year(), date.Month(), date.Day(),
+				t.Hour(), t.Minute(), 0, 0, loc,
+			)
+		}
+	}
+
+	return time.Time{} // couldn't parse time
+}
+
 // translateMonth translates a month name from French to English, if it needs to be translated
 func translateMonth(date string) string {
 	return frenchMonthReplacer.Replace(date)

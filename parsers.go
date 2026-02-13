@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/gocolly/colly/v2"
@@ -30,7 +31,8 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 	case "verre-bouteille":
 		e = parseVerreBouteille(h)
 	default:
-		e = parseGeneric(h)
+		fmt.Printf("ERROR: no parser for [%q]. Returning empty event...\n", venueKey)
+		return Event{}, nil
 	}
 
 	return e, e.validateEvent()
@@ -216,11 +218,4 @@ func parseVerreBouteille(h *colly.HTMLElement) Event {
 
 	e.enrichEvent()
 	return e
-}
-
-// parseGeneric is the default for the switch case. Should never have to run.
-func parseGeneric(h *colly.HTMLElement) Event {
-	return Event{
-		Name: strings.TrimSpace(h.Text),
-	}
 }
