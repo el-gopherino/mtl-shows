@@ -7,27 +7,35 @@ import (
 )
 
 type Event struct {
-	VenueKey        string // key for venue map
-	Name            string
-	Venue           string
-	Date            string
-	Address         string
-	Time            string
-	Price           string
-	TicketURL       string
-	DayOfWeek       string
-	CalendarURL     string
-	ICSData         string
-	EventImage      string
-	ParsedDate      time.Time
-	PriceValue      float64
-	DaysUntil       int
-	AlreadyHappened bool
-	IsFree          bool
-	isRightNow      bool
-	IsToday         bool
-	IsThisWeekend   bool
-	IsThisWeek      bool
+	// Externe
+	VenueKey string `json:"venue_key"` // key for venue map
+	Name     string `json:"name"`
+	Venue    string `json:"venue"`
+	Date     string `json:"date"`
+	Address  string `json:"address"`
+
+	Time       string `json:"time,omitempty"`
+	Price      string `json:"price,omitempty"`
+	TicketURL  string `json:"ticket_url,omitempty"`
+	EventImage string `json:"event_image,omitempty"`
+
+	DayOfWeek     string `json:"day_of_week"`
+	IsFree        bool   `json:"is_free"`
+	IsToday       bool   `json:"is_today"`
+	IsTomorrow    bool   `json:"is_tomorrow"`
+	IsThisWeekend bool   `json:"is_this_weekend"`
+	IsThisWeek    bool   `json:"is_this_week"`
+
+	// internal
+	ParsedDate      time.Time `json:"-"`
+	PriceValue      float64   `json:"-"`
+	DaysUntil       int       `json:"-"`
+	AlreadyHappened bool      `json:"-"`
+	IsRightNow      bool      `json:"-"`
+
+	// pas encore utilisé
+	ICSData     string `json:"-"`
+	CalendarURL string `json:"-"`
 }
 
 func (e *Event) enrichEvent() {
@@ -42,6 +50,7 @@ func (e *Event) enrichEvent() {
 		e.DaysUntil = -1
 		e.DayOfWeek = ""
 		e.IsToday = false
+		e.IsTomorrow = false
 		e.IsThisWeekend = false
 		e.IsThisWeek = false
 
@@ -54,6 +63,7 @@ func (e *Event) enrichEvent() {
 	e.DaysUntil = daysUntil(e.ParsedDate)
 	e.DayOfWeek = e.ParsedDate.Weekday().String()
 	e.IsToday = isToday(e.ParsedDate)
+	e.IsTomorrow = daysUntil(e.ParsedDate) == 1
 	e.IsThisWeekend = isThisWeekend(e.ParsedDate)
 	e.IsThisWeek = e.DaysUntil >= 0 && e.DaysUntil <= 7
 }
@@ -125,6 +135,15 @@ func (el EventList) RightNow() (result EventList) {
 func (el EventList) Tonight() (result EventList) {
 	for _, e := range el {
 		if e.IsToday {
+			result = append(result, e)
+		}
+	}
+	return result
+}
+
+func (el EventList) Tomorrow() (result EventList) {
+	for _, e := range el {
+		if e.IsTomorrow {
 			result = append(result, e)
 		}
 	}

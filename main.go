@@ -1,22 +1,41 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"fmt"
-	"strings"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
-
-	"github.com/gocolly/colly/v2"
 )
 
 func main() {
+	now := time.Now()
 
-	// runSequential()
-	runConcurrent()
+	sequential := flag.Bool("seq", false, "sequential scraping")
+	concurrent := flag.Bool("conc", false, "concurrent scraping")
+	flag.Parse()
+
+	if *sequential {
+		runSequential()
+		fmt.Println("\nruntime duration: ", time.Since(now))
+		return
+	}
+	if *concurrent {
+		runConcurrent()
+		fmt.Println("\nruntime duration: ", time.Since(now))
+		return
+	}
+
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
+	runOnSchedule(ctx, 1*time.Hour)
 }
 
 func runSequential() {
-	now := time.Now()
+	fmt.Println("running scraper in sequential mode...")
 	allEvents := make(map[string]EventList)
 
 	for key, venue := range allVenues {
@@ -30,14 +49,11 @@ func runSequential() {
 		}
 		allEvents[key] = events
 	}
-
 	saveAllEvents(allEvents)
-	fmt.Println("\nruntime duration: ", time.Since(now))
 }
 
 func runConcurrent() {
-
-	now := time.Now()
+	fmt.Println("running scraper in concurrent mode...")
 	allEvents := make(map[string]EventList)
 
 	var mu sync.Mutex
@@ -63,38 +79,24 @@ func runConcurrent() {
 
 	wg.Wait()
 	saveAllEvents(allEvents)
-	fmt.Println("\nruntime duration: ", time.Since(now))
-
 }
 
-// scrapeVenue scrapes the HTML content of a Venue, in order to parse it in parsers.go
-func scrapeVenue(venueKey string, venue Venue) (events EventList) {
-	events = make(EventList, 0, 20)
+func runOnSchedule(ctx context.Context, interval time.Duration) {
+	fmt.Println("running scraper on schedule...")
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
 
-	c := colly.NewCollector(
-		colly.AllowedDomains(venue.AllowedDomains...),
-	)
-	c.OnHTML(venue.Selector, func(h *colly.HTMLElement) {
-		event, missing := parseEvent(h, venueKey)
-		if event.AlreadyHappened {
+	// scrape immediately on startup
+	runConcurrent()
+
+	for {
+		select {
+		case <-ticker.C:
+			fmt.Println("Scheduled scrape starting...")
+			runConcurrent()
+		case <-ctx.Done():
+			fmt.Println("Scheduler stopped.")
 			return
 		}
-		if len(missing) > 0 {
-			fmt.Printf("\t[%s]: missing: %v\n", venueKey, strings.Join(missing, ", "))
-		}
-		events = append(events, event)
-	})
-
-	c.OnError(func(r *colly.Response, e error) {
-		fmt.Printf("Error: %s\n", e.Error())
-	})
-	c.OnScraped(func(r *colly.Response) {
-		fmt.Printf("Scraping for %s finished.\n", venue.Name)
-	})
-
-	for _, link := range venue.Links {
-		c.Visit(link)
 	}
-
-	return events
 }
