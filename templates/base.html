@@ -1,13 +1,109 @@
+{{define "base"}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>HTML 5 Boilerplate</title>
-    <link rel="stylesheet" href="style.css">
+    <title>{{.Title}} -- mtl-shows</title>
+    <style>
+        body {
+            font-family: Verdana, Geneva, sans-serif;
+            font-size: 12px;
+            max-width: 700px;
+            margin: 10px auto;
+            background: #fff;
+            color: #333;
+        }
+        h1 {
+            font-size: 16px;
+            border-bottom: 1px solid #999;
+            padding-bottom: 4px;
+        }
+        h2 {
+            font-size: 13px;
+            color: #555;
+        }
+        nav {
+            padding: 4px 0;
+            margin-bottom: 8px;
+        }
+        nav a {
+            color: #0000EE;
+            margin-right: 8px;
+            font-size: 11px;
+        }
+        nav a:visited {
+            color: #551A8B;
+        }
+        .updated {
+            font-size: 10px;
+            color: #888;
+        }
+        .event {
+            border-bottom: 1px dashed #ccc;
+            padding: 8px 0;
+        }
+        .event img {
+            max-width: 120px;
+            border: 1px solid #ccc;
+        }
+        .event h3 {
+            font-size: 13px;
+            margin: 4px 0 2px 0;
+        }
+        .event p {
+            margin: 2px 0;
+            color: #555;
+        }
+        .event a {
+            font-size: 11px;
+            color: #0000EE;
+        }
+    </style>
 </head>
 <body>
-<h1>mtl-shows</h1>
+    <h1>mtl-shows</h1>
+    <nav>
+        <a href="/">All</a>
+        <a href="/tonight">Tonight</a>
+        <a href="/tomorrow">Tomorrow</a>
+        <a href="/this-week">This Week</a>
+        <a href="/this-weekend">This Weekend</a>
+        <a href="/right-now">Right Now</a>
+    </nav>
+
+    <div class="filters">
+        <a href="?">all venues</a> ·
+        <a href="?venue=casa-del-popolo">Casa del Popolo</a> ·
+        <a href="?venue=la-sala-rossa">La Sala Rossa</a> ·
+        <a href="?venue=la-sotterenea">La Sotterenea</a> ·
+        <a href="?venue=ptit-ours">P'tit Ours</a> ·
+        <a href="?venue=la-toscadura">La Toscadura</a> ·
+        <a href="?venue=quai-des-brumes">Quai des Brumes</a> ·
+        <a href="?venue=cafe-campus">Cafe Campus</a> ·
+        <a href="?venue=hemisphere-gauche">L'Hemisphere Gauche</a> ·
+        <a href="?venue=verre-bouteille">Le Verre Bouteille</a> ·
+        <a href="?venue=turbo-haus">Turbo Haus</a>
+
+    </div>
+
+    <h2>{{.Title}} ({{.EventCount}})</h2>
+    <p class="updated">Updated: {{.GeneratedAt}}</p>
+
+    {{if .Events}}
+    {{range .Events}}
+    <div class="event">
+        {{if .EventImage}}<img src="{{.EventImage}}" alt="{{.Name}}" style="max-width: 200px;">{{end}}
+        <h3>{{.Name}}</h3>
+        <p>{{.Venue}} — {{.Address}}</p>
+        <p>{{.Date}} · {{.Time}}</p>
+        <p>{{.Price}}</p>
+        {{if .TicketURL}}<a href="{{.TicketURL}}">Tickets</a>{{end}}
+    </div>
+    {{end}}
+    {{else}}
+    <p>No events found.</p>
+    {{end}}
 </body>
 </html>
+{{end}}

@@ -41,15 +41,18 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 func parseCasaDelPopolo(h *colly.HTMLElement) Event {
 	children := h.DOM.Children().Filter("div")
 
+	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
+
 	e := Event{
-		VenueKey:  "casa-del-popolo",
-		Name:      strings.TrimSpace(children.Eq(1).Text()),
-		Date:      strings.TrimSpace(children.Eq(0).Text()),
-		Venue:     strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
-		Address:   strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
-		Time:      strings.TrimSpace(children.Eq(3).Text()),
-		Price:     strings.TrimSpace(children.Eq(4).Text()),
-		TicketURL: h.ChildAttr("a.btn-inverse", "href"),
+		VenueKey:   "casa-del-popolo",
+		Name:       strings.TrimSpace(children.Eq(1).Text()),
+		Date:       strings.TrimSpace(children.Eq(0).Text()),
+		Venue:      strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
+		Address:    strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
+		Time:       strings.TrimSpace(children.Eq(3).Text()),
+		Price:      strings.TrimSpace(children.Eq(4).Text()),
+		TicketURL:  h.ChildAttr("a.btn-inverse", "href"),
+		EventImage: eventImage,
 	}
 	e.enrichEvent()
 

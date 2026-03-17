@@ -7,6 +7,7 @@ type PageData struct {
 	Events      []Event
 	EventCount  int
 	GeneratedAt string
+	VenueFilter string
 }
 
 func newPageData(title string, events []Event) PageData {
@@ -16,9 +17,4 @@ func newPageData(title string, events []Event) PageData {
 		EventCount:  len(events),
 		GeneratedAt: time.Now().In(loc).Format("Monday, January 2 at 3:04PM"),
 	}
-}
-
-// todo: for event image parsing
-func saveAllEventsHTML(allEvents []Event) error {
-	return nil
 }

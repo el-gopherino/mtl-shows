@@ -169,6 +169,7 @@ func (el EventList) ThisWeekend() (result EventList) {
 }
 
 // Free returns events that are free (no money)
+// not used
 func (el EventList) Free() (result EventList) {
 	for _, e := range el {
 		if e.IsFree {
@@ -182,6 +183,16 @@ func (el EventList) Free() (result EventList) {
 func (el EventList) ByDay(day time.Weekday) (result EventList) {
 	for _, e := range el {
 		if e.ParsedDate.Weekday() == day {
+			result = append(result, e)
+		}
+	}
+	return result
+}
+
+// ByVenue filters by venue
+func (el EventList) ByVenue(venueKey string) (result EventList) {
+	for _, e := range el {
+		if e.VenueKey == venueKey {
 			result = append(result, e)
 		}
 	}

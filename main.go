@@ -31,23 +31,42 @@ func main() {
 	}
 
 	if *serve {
-		runConcurrent()
-		http.HandleFunc("/events", handleAllEvents)
-		http.HandleFunc("/events/right-now", handleRightNow)
-		http.HandleFunc("/events/tonight", handleTonight)
-		http.HandleFunc("/events/tomorrow", handleTomorrow)
-		http.HandleFunc("/events/this-week", handleThisWeek)
-		http.HandleFunc("/events/this-weekend", handleThisWeekend)
+		ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer cancel()
+
+		go runOnSchedule(ctx, 1*time.Hour) // run scraper once every hour
+
+		mux := http.NewServeMux()
+
+		mux.HandleFunc("/", handlePage("All Events", func(el EventList) EventList { return el }))
+		mux.HandleFunc("/tonight", handlePage("Tonight", EventList.Tonight))
+		mux.HandleFunc("/tomorrow", handlePage("Tomorrow", EventList.Tomorrow))
+		mux.HandleFunc("/this-week", handlePage("This Week", EventList.ThisWeek))
+		mux.HandleFunc("/this-weekend", handlePage("This Weekend", EventList.ThisWeekend))
+		mux.HandleFunc("/right-now", handlePage("Right Now", EventList.RightNow))
+
+		//mux.HandleFunc("/events", handleAllEvents)
+		//mux.HandleFunc("/events/right-now", handleRightNow)
+		//mux.HandleFunc("/events/tonight", handleTonight)
+		//mux.HandleFunc("/events/tomorrow", handleTomorrow)
+		//mux.HandleFunc("/events/this-week", handleThisWeek)
+		//mux.HandleFunc("/events/this-weekend", handleThisWeekend)
+
+		srv := &http.Server{
+			Addr:    ":8080",
+			Handler: corsMiddleware(mux),
+		}
+
+		// allows to kill scheduler and port with ctrl+C
+		go func() {
+			<-ctx.Done()
+			srv.Shutdown(context.Background())
+		}()
 
 		fmt.Println("API server running on port :8080")
-		http.ListenAndServe(":8080", nil)
+		srv.ListenAndServe()
 		return
 	}
-
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
-	runOnSchedule(ctx, 1*time.Hour)
 }
 
 func runSequential() {
@@ -72,7 +91,7 @@ func runConcurrent() {
 	fmt.Println("running scraper in concurrent mode...")
 	allEvents := make(map[string]EventList)
 
-	var mu sync.Mutex
+	var scrapeMu sync.Mutex
 	var wg sync.WaitGroup
 
 	for key, venue := range allVenues {
@@ -87,14 +106,16 @@ func runConcurrent() {
 			} else {
 				events = scrapeVenue(k, v)
 			}
-			mu.Lock()
+			scrapeMu.Lock()
 			allEvents[k] = events
-			mu.Unlock()
+			scrapeMu.Unlock()
 		}(key, venue)
 	}
 
 	wg.Wait()
 	saveAllEvents(allEvents)
+
+	fmt.Println("\nscraping finished.")
 }
 
 func runOnSchedule(ctx context.Context, interval time.Duration) {
