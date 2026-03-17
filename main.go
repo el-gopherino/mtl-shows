@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -15,6 +16,7 @@ func main() {
 
 	sequential := flag.Bool("seq", false, "sequential scraping")
 	concurrent := flag.Bool("conc", false, "concurrent scraping")
+	serve := flag.Bool("serve", false, "run API server")
 	flag.Parse()
 
 	if *sequential {
@@ -25,6 +27,20 @@ func main() {
 	if *concurrent {
 		runConcurrent()
 		fmt.Println("\nruntime duration: ", time.Since(now))
+		return
+	}
+
+	if *serve {
+		runConcurrent()
+		http.HandleFunc("/events", handleAllEvents)
+		http.HandleFunc("/events/right-now", handleRightNow)
+		http.HandleFunc("/events/tonight", handleTonight)
+		http.HandleFunc("/events/tomorrow", handleTomorrow)
+		http.HandleFunc("/events/this-week", handleThisWeek)
+		http.HandleFunc("/events/this-weekend", handleThisWeekend)
+
+		fmt.Println("API server running on port :8080")
+		http.ListenAndServe(":8080", nil)
 		return
 	}
 

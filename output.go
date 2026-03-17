@@ -59,6 +59,11 @@ func saveAllEvents(allEvents map[string]EventList) {
 
 	allEventsList.SortByDate()
 
+	// update cached events for the API
+	mu.Lock()
+	cachedEvents = allEventsList
+	mu.Unlock()
+
 	// all Jason output
 	saveAllEventsJSON(allEventsList)
 	saveRightNowJSON(allEventsList)

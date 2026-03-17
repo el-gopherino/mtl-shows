@@ -109,7 +109,7 @@ func (el EventList) SortByPrice() {
 	})
 }
 
-// RightNow returns events still happening from 1 an hour ago, and events happening within 2 hours of current time
+// RightNow returns events still happening from 1 an hour ago, and events happening within 3 hours of current time
 func (el EventList) RightNow() (result EventList) {
 	now := time.Now().In(loc)
 
@@ -122,8 +122,8 @@ func (el EventList) RightNow() (result EventList) {
 		// Event started up to 1 hour ago (likely still happening)
 		startedRecently := eventStart.After(now.Add(-1*time.Hour)) && eventStart.Before(now)
 
-		// Event starts within the next 2 hours
-		startsSoon := eventStart.After(now) && eventStart.Before(now.Add(2*time.Hour))
+		// Event starts within the next 3 hours
+		startsSoon := eventStart.After(now) && eventStart.Before(now.Add(3*time.Hour))
 
 		if startedRecently || startsSoon {
 			result = append(result, e)
