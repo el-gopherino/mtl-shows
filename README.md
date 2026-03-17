@@ -7,10 +7,9 @@ Scrapes and serves information about live shows and events in Montreal's indepen
 ```bash
 go build -o mtl-shows .
 
-./mtl-shows -serve  # scrape concurrently and run API server on :8080
+./mtl-shows -serve  # scrape concurrently and run API server on :8080 with scheduler
 ./mtl-shows -conc   # scrape once (concurrent)
 ./mtl-shows -seq    # scrape once (sequential)
-./mtl-shows         # scrape on a 1-hour schedule
 ```
 
 ## API Endpoints
