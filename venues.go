@@ -20,7 +20,7 @@ const (
 	VerreBouteilleSelector   = "div.card-container"
 )
 
-// venue URLs for Squarespace powered venues (use JSON unmarshaling)
+// URLs for Squarespace powered venues (use JSON unmarshaling)
 const (
 	TurboHausURL = "https://www.turbohaus.ca/calendrier?format=json"
 )

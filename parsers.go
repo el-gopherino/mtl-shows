@@ -40,7 +40,6 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 
 func parseCasaDelPopolo(h *colly.HTMLElement) Event {
 	children := h.DOM.Children().Filter("div")
-
 	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
 
 	e := Event{
@@ -61,16 +60,18 @@ func parseCasaDelPopolo(h *colly.HTMLElement) Event {
 
 func parseSalaRossa(h *colly.HTMLElement) Event {
 	children := h.DOM.Children().Filter("div")
+	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
 
 	e := Event{
-		VenueKey:  "la-sala-rossa",
-		Name:      strings.TrimSpace(children.Eq(1).Text()),
-		Date:      strings.TrimSpace(children.Eq(0).Text()),
-		Venue:     strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
-		Address:   strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
-		Time:      strings.TrimSpace(children.Eq(3).Text()),
-		Price:     strings.TrimSpace(children.Eq(4).Text()),
-		TicketURL: h.ChildAttr("a.btn-inverse", "href"),
+		VenueKey:   "la-sala-rossa",
+		Name:       strings.TrimSpace(children.Eq(1).Text()),
+		Date:       strings.TrimSpace(children.Eq(0).Text()),
+		Venue:      strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
+		Address:    strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
+		Time:       strings.TrimSpace(children.Eq(3).Text()),
+		Price:      strings.TrimSpace(children.Eq(4).Text()),
+		TicketURL:  h.ChildAttr("a.btn-inverse", "href"),
+		EventImage: eventImage,
 	}
 	e.enrichEvent()
 
@@ -79,16 +80,18 @@ func parseSalaRossa(h *colly.HTMLElement) Event {
 
 func parseLaSotterenea(h *colly.HTMLElement) Event {
 	children := h.DOM.Children().Filter("div")
+	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
 
 	e := Event{
-		VenueKey:  "la-sotterenea",
-		Name:      strings.TrimSpace(children.Eq(1).Text()),
-		Date:      strings.TrimSpace(children.Eq(0).Text()),
-		Venue:     strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
-		Address:   strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
-		Time:      strings.TrimSpace(children.Eq(3).Text()),
-		Price:     strings.TrimSpace(children.Eq(4).Text()),
-		TicketURL: h.ChildAttr("a.btn-inverse", "href"),
+		VenueKey:   "la-sotterenea",
+		Name:       strings.TrimSpace(children.Eq(1).Text()),
+		Date:       strings.TrimSpace(children.Eq(0).Text()),
+		Venue:      strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
+		Address:    strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
+		Time:       strings.TrimSpace(children.Eq(3).Text()),
+		Price:      strings.TrimSpace(children.Eq(4).Text()),
+		TicketURL:  h.ChildAttr("a.btn-inverse", "href"),
+		EventImage: eventImage,
 	}
 	e.enrichEvent()
 
@@ -97,16 +100,18 @@ func parseLaSotterenea(h *colly.HTMLElement) Event {
 
 func parsePtitOurs(h *colly.HTMLElement) Event {
 	children := h.DOM.Children().Filter("div")
+	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
 
 	e := Event{
-		VenueKey:  "ptit-ours",
-		Name:      strings.TrimSpace(children.Eq(1).Text()),
-		Date:      strings.TrimSpace(children.Eq(0).Text()),
-		Venue:     strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
-		Address:   strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
-		Time:      strings.TrimSpace(children.Eq(3).Text()),
-		Price:     strings.TrimSpace(children.Eq(4).Text()),
-		TicketURL: h.ChildAttr("a.btn-inverse", "href"),
+		VenueKey:   "ptit-ours",
+		Name:       strings.TrimSpace(children.Eq(1).Text()),
+		Date:       strings.TrimSpace(children.Eq(0).Text()),
+		Venue:      strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
+		Address:    strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
+		Time:       strings.TrimSpace(children.Eq(3).Text()),
+		Price:      strings.TrimSpace(children.Eq(4).Text()),
+		TicketURL:  h.ChildAttr("a.btn-inverse", "href"),
+		EventImage: eventImage,
 	}
 	e.enrichEvent()
 
@@ -115,16 +120,18 @@ func parsePtitOurs(h *colly.HTMLElement) Event {
 
 func parseLaToscadura(h *colly.HTMLElement) Event {
 	children := h.DOM.Children().Filter("div")
+	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
 
 	e := Event{
-		VenueKey:  "la-toscadura",
-		Name:      strings.TrimSpace(children.Eq(1).Text()),
-		Date:      strings.TrimSpace(children.Eq(0).Text()),
-		Venue:     strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
-		Address:   strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
-		Time:      strings.TrimSpace(children.Eq(3).Text()),
-		Price:     strings.TrimSpace(children.Eq(4).Text()),
-		TicketURL: h.ChildAttr("a.btn-inverse", "href"),
+		VenueKey:   "la-toscadura",
+		Name:       strings.TrimSpace(children.Eq(1).Text()),
+		Date:       strings.TrimSpace(children.Eq(0).Text()),
+		Venue:      strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
+		Address:    strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
+		Time:       strings.TrimSpace(children.Eq(3).Text()),
+		Price:      strings.TrimSpace(children.Eq(4).Text()),
+		TicketURL:  h.ChildAttr("a.btn-inverse", "href"),
+		EventImage: eventImage,
 	}
 	e.enrichEvent()
 
@@ -135,19 +142,22 @@ func parseCafeCampus(h *colly.HTMLElement) Event {
 
 	rawDateTime := strings.TrimSpace(h.ChildText("span.sh-date"))
 	date, eventTime := splitDateTime(rawDateTime)
-
 	priceText := h.ChildText("div.sh-excerpt")
 	price := extractAdvancePrice(priceText)
 
+	imageStyle, _ := h.DOM.Parent().Find("div.noo-thumbnail").Attr("style")
+	eventImage := extractBackgroundURL(imageStyle)
+
 	e := Event{
-		VenueKey:  "cafe-campus",
-		Name:      strings.TrimSpace(h.ChildText("h4 a")),
-		Date:      date,
-		Venue:     "Cafe Campus",
-		Address:   "57 Rue Prince-Arthur Est",
-		Time:      eventTime,
-		Price:     price,
-		TicketURL: h.ChildAttr("span.sh-address a", "href"),
+		VenueKey:   "cafe-campus",
+		Name:       strings.TrimSpace(h.ChildText("h4 a")),
+		Date:       date,
+		Venue:      "Cafe Campus",
+		Address:    "57 Rue Prince-Arthur Est",
+		Time:       eventTime,
+		Price:      price,
+		TicketURL:  h.ChildAttr("span.sh-address a", "href"),
+		EventImage: eventImage,
 	}
 
 	e.enrichEvent()
@@ -157,13 +167,14 @@ func parseCafeCampus(h *colly.HTMLElement) Event {
 func parseQuaiDesBrumes(h *colly.HTMLElement) Event {
 	// prices not shown on page
 	e := Event{
-		VenueKey:  "quai-des-brumes",
-		Name:      h.ChildText("h3.mec-event-title a"),
-		Date:      h.ChildText("span.mec-start-date-label"),
-		Venue:     "Quai des Brumes",
-		Address:   "4481 Rue Saint-Denis",
-		Time:      h.ChildText("span.mec-start-time"),
-		TicketURL: h.ChildAttr("a.mec-color-hover", "href"),
+		VenueKey:   "quai-des-brumes",
+		Name:       h.ChildText("h3.mec-event-title a"),
+		Date:       h.ChildText("span.mec-start-date-label"),
+		Venue:      "Quai des Brumes",
+		Address:    "4481 Rue Saint-Denis",
+		Time:       h.ChildText("span.mec-start-time"),
+		TicketURL:  h.ChildAttr("a.mec-color-hover", "href"),
+		EventImage: h.ChildAttr("div.mec-event-image img", "src"),
 	}
 
 	e.enrichEvent()
@@ -171,6 +182,9 @@ func parseQuaiDesBrumes(h *colly.HTMLElement) Event {
 }
 
 func parseHemisphereGauche(h *colly.HTMLElement) Event {
+
+	eventImage, _ := h.DOM.Parent().Find("div[data-hook=ev-list-image] img").First().Attr("src")
+
 	e := Event{
 		VenueKey: "hemisphere-gauche",
 		Name:     h.ChildText("a.WFgzOI"),
@@ -178,7 +192,8 @@ func parseHemisphereGauche(h *colly.HTMLElement) Event {
 		Venue:    "L'Hémisphere Gauche",
 		Address:  "221 Beaubien Est",
 		// skipping time for this one
-		TicketURL: h.ChildAttr("a.DjQEyU m022zm aUkG34", "href"),
+		TicketURL:  h.ChildAttr("a.DjQEyU m022zm aUkG34", "href"),
+		EventImage: eventImage,
 	}
 
 	e.enrichEvent()
@@ -201,10 +216,8 @@ func parseVerreBouteille(h *colly.HTMLElement) Event {
 		date = rawDateTime
 	}
 
-	// Ticket URL from any link to showInfo.php
 	ticketURL := h.ChildAttr("a[href*='showInfo']", "href")
 
-	// Event image is in the inline style: background: url("https://...")
 	imageStyle := h.ChildAttr("div.card", "style")
 	eventImage := extractBackgroundURL(imageStyle)
 

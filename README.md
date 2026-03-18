@@ -16,12 +16,12 @@ go build -o mtl-shows .
 
 | Endpoint | Description |
 |---|---|
-| `GET /events` | All upcoming events |
-| `GET /events/tonight` | Events happening today |
-| `GET /events/tomorrow` | Events happening tomorrow |
-| `GET /events/this-week` | Events within the next 7 days |
-| `GET /events/this-weekend` | Events this Friday–Sunday |
-| `GET /events/right-now` | Events starting soon or in progress |
+| `GET /` | All upcoming events |
+| `GET /tonight` | Events happening today |
+| `GET /tomorrow` | Events happening tomorrow |
+| `GET /this-week` | Events within the next 7 days |
+| `GET /this-weekend` | Events this Friday–Sunday |
+| `GET /right-now` | Events starting soon or in progress |
 
 ## Venues
 
