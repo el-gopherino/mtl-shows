@@ -16,7 +16,7 @@ func main() {
 
 	sequential := flag.Bool("seq", false, "sequential scraping")
 	concurrent := flag.Bool("conc", false, "concurrent scraping")
-	serve := flag.Bool("serve", false, "run API server")
+	serve := flag.Bool("serve", false, "scrapes concurrently first, then runs API server with 1 hour scheduler")
 	flag.Parse()
 
 	if *sequential {
@@ -88,6 +88,7 @@ func runSequential() {
 }
 
 func runConcurrent() {
+	now := time.Now()
 	fmt.Println("running scraper in concurrent mode...")
 	allEvents := make(map[string]EventList)
 
@@ -115,7 +116,8 @@ func runConcurrent() {
 	wg.Wait()
 	saveAllEvents(allEvents)
 
-	fmt.Println("\nscraping finished.")
+	fmt.Println("\nScraping of all venues complete.")
+	fmt.Printf("Scraping took %v\n", time.Since(now))
 }
 
 func runOnSchedule(ctx context.Context, interval time.Duration) {

@@ -30,6 +30,8 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 		e = parseHemisphereGauche(h)
 	case "verre-bouteille":
 		e = parseVerreBouteille(h)
+	case "piranha-bar":
+		e = parsePiranhaBar(h)
 	default:
 		fmt.Printf("ERROR: no parser for [%q]. Returning empty event...\n", venueKey)
 		return Event{}, nil
@@ -175,6 +177,29 @@ func parseQuaiDesBrumes(h *colly.HTMLElement) Event {
 		Time:       h.ChildText("span.mec-start-time"),
 		TicketURL:  h.ChildAttr("a.mec-color-hover", "href"),
 		EventImage: h.ChildAttr("div.mec-event-image img", "src"),
+	}
+
+	e.enrichEvent()
+	return e
+}
+
+func parsePiranhaBar(h *colly.HTMLElement) Event {
+
+	ticketPath := h.ChildAttr("a.eventlist-button", "href")
+	ticketURL := ""
+	if ticketPath != "" {
+		ticketURL = "https://www.piranhabar.ca" + ticketPath
+	}
+
+	e := Event{
+		VenueKey:   "piranha-bar",
+		Name:       h.ChildText("h1.eventlist-title a"),
+		Date:       strings.TrimSpace(h.DOM.Find("time.event-date").First().Text()),
+		Venue:      "Piranha Bar",
+		Address:    "680 Rue Sainte-Catherine Ouest",
+		Time:       strings.TrimSpace(h.DOM.Find("time.event-time-localized").First().Text()),
+		TicketURL:  ticketURL,
+		EventImage: h.ChildAttr("a.eventlist-column-thumbnail img", "src"),
 	}
 
 	e.enrichEvent()

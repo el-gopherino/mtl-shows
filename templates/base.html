@@ -84,6 +84,7 @@
         <a href="?venue=hemisphere-gauche">L'Hemisphere Gauche</a> ·
         <a href="?venue=verre-bouteille">Le Verre Bouteille</a> ·
         <a href="?venue=turbo-haus">Turbo Haus</a>
+        <a href="?venue=piranha-bar">Piranha Bar</a>
 
     </div>
 
@@ -98,7 +99,7 @@
         <p>{{.Venue}} — {{.Address}}</p>
         <p>{{.Date}} · {{.Time}}</p>
         <p>{{.Price}}</p>
-        {{if .TicketURL}}<a href="{{.TicketURL}}">Tickets</a>{{end}}
+        {{if .TicketURL}}<a href="{{.TicketURL}}">Link to event</a>{{end}}
     </div>
     {{end}}
     {{else}}

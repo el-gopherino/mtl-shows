@@ -11,16 +11,17 @@ type Venue struct {
 	Website        string
 }
 
-// venue websites' CSS selectors for colly scraper -> event info and event logo
+// venue websites' CSS selectors for colly scraper -> event info + logo
 const (
 	CasaDelPopoloSelector    = "div.md\\:w-5\\/12.p-6"
 	QuaiDesBrumesSelector    = "article.mec-event-article"
 	CafeCampusSelector       = "div.noo-shevent-content"
 	HemisphereGaucheSelector = "div.IFphb0"
 	VerreBouteilleSelector   = "div.card-container"
+	PiranhaBarSelector       = "article.eventlist-event"
 )
 
-// URLs for Squarespace powered venues (use JSON unmarshaling)
+// URLs for Squarespace powered venues
 const (
 	TurboHausURL = "https://www.turbohaus.ca/calendrier?format=json"
 )
@@ -150,6 +151,20 @@ var allVenues = map[string]Venue{
 		},
 		Selector: VerreBouteilleSelector,
 		Website:  "https://verrebouteille.com",
+	},
+
+	"piranha-bar": {
+		Name:    "Piranha Bar",
+		Address: "680 Rue Sainte-Catherine Ouest",
+		Links: []string{
+			"https://www.piranhabar.ca/events",
+		},
+		AllowedDomains: []string{
+			"piranhabar.ca",
+			"www.piranhabar.ca",
+		},
+		Selector: PiranhaBarSelector,
+		Website:  "https://www.piranhabar.ca",
 	},
 
 	// JS-rendered

@@ -70,6 +70,9 @@ func parseDate(date string) (time.Time, error) {
 		// Case Verre Bouteille: "12 Février" → normalized to "12 february"
 		{"2 January", true},
 
+		// Case Piranha Bar: "Thu, Mar 19, 2026"
+		{"Mon, Jan 2, 2006", false},
+
 		// Case quai des brumes : "10 Fév"
 		{"2 Jan", true},
 

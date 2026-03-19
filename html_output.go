@@ -4,13 +4,13 @@ import "time"
 
 type PageData struct {
 	Title       string
-	Events      []Event
+	Events      EventList
 	EventCount  int
 	GeneratedAt string
 	VenueFilter string
 }
 
-func newPageData(title string, events []Event) PageData {
+func newPageData(title string, events EventList) PageData {
 	return PageData{
 		Title:       title,
 		Events:      events,
