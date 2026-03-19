@@ -35,3 +35,4 @@ go build -o mtl-shows .
 - L'Hemisphere Gauche
 - Le Verre Bouteille
 - Turbo Haüs
+- Piranha Bar
