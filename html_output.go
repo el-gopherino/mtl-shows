@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	"html/template"
+	"time"
+)
 
 type PageData struct {
 	Title       string
@@ -8,6 +11,7 @@ type PageData struct {
 	EventCount  int
 	GeneratedAt string
 	VenueFilter string
+	VenuesJSON  template.JS // JSON array of venues with coordinates + their events
 }
 
 func newPageData(title string, events EventList) PageData {

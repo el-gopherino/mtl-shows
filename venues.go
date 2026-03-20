@@ -3,12 +3,17 @@ package main
 type Venue struct {
 	Name           string
 	Group          string // group related venues (multiple venues for a single website) this is rare
-	Links          []string
+	Link           string
 	AllowedDomains []string
 	Selector       string // CSS selector for events on page
-	Address        string
-	Neighborhood   string
-	Website        string
+
+	// for interactive map
+	Latitude  float64
+	Longitude float64
+
+	Address      string
+	Neighborhood string
+	Website      string
 }
 
 // venue websites' CSS selectors for colly scraper -> event info + logo
@@ -29,156 +34,192 @@ const (
 var allVenues = map[string]Venue{
 	"casa-del-popolo": {
 		Name:    "Casa del Popolo",
-		Address: "4873 St-Laurent",
+		Address: "4873 Boul. St-Laurent",
 		Group:   "casa-del-popolo-group",
-		Links: []string{
-			"https://casadelpopolo.com/en/events/casa-del-popolo",
-		},
+
+		Link: "https://casadelpopolo.com/en/events/casa-del-popolo",
 		AllowedDomains: []string{
 			"casadelpopolo.com",
 			"www.casadelpopolo.com",
 		},
 		Selector: CasaDelPopoloSelector,
+		Website:  "https://casadelpopolo.com/en",
+
+		Latitude:  45.521805,
+		Longitude: -73.590431,
 	},
 
 	"la-sala-rossa": {
 		Name:    "La Sala Rossa",
-		Address: "4848 St-Laurent",
+		Address: "4848 Boul. St-Laurent",
 		Group:   "casa-del-popolo-group",
-		Links: []string{
-			"https://casadelpopolo.com/en/events/la-sala-rossa",
-		},
+
+		Link: "https://casadelpopolo.com/en/events/la-sala-rossa",
 		AllowedDomains: []string{
 			"casadelpopolo.com",
 			"www.casadelpopolo.com",
 		},
 		Selector: CasaDelPopoloSelector,
+		Website:  "https://casadelpopolo.com/en",
+
+		Latitude:  45.521771,
+		Longitude: -73.590493,
 	},
 
 	"la-sotterenea": {
 		Name:    "La Sotterenea",
-		Address: "4848 St-Laurent",
+		Address: "4848 Boul. St-Laurent",
 		Group:   "casa-del-popolo-group",
-		Links: []string{
-			"https://casadelpopolo.com/en/events/la-sotterenea",
-		},
+
+		Link: "https://casadelpopolo.com/en/events/la-sotterenea",
 		AllowedDomains: []string{
 			"casadelpopolo.com",
 			"www.casadelpopolo.com",
 		},
+
 		Selector: CasaDelPopoloSelector,
+		Website:  "https://casadelpopolo.com/en",
+
+		Latitude:  45.521771,
+		Longitude: -73.590493,
 	},
 
 	"ptit-ours": {
 		Name:    "Ptit Ours",
 		Address: "5589 Avenue du Parc",
 		Group:   "casa-del-popolo-group",
-		Links: []string{
-			"https://casadelpopolo.com/en/events/ptit-ours",
-		},
+
+		Link: "https://casadelpopolo.com/en/events/ptit-ours",
 		AllowedDomains: []string{
 			"casadelpopolo.com",
 			"www.casadelpopolo.com",
 		},
+
 		Selector: CasaDelPopoloSelector,
+		Website:  "https://casadelpopolo.com/en",
+
+		Latitude:  45.522644,
+		Longitude: -73.602695,
 	},
 
 	"la-toscadura": {
 		Name:    "La Toscadura",
 		Address: "4388 St-Laurent",
 		Group:   "casa-del-popolo-group",
-		Links: []string{
-			"https://casadelpopolo.com/en/events/la-toscadura",
-		},
+
+		Link: "https://casadelpopolo.com/en/events/la-toscadura",
 		AllowedDomains: []string{
 			"casadelpopolo.com",
 			"www.casadelpopolo.com",
 		},
+
 		Selector: CasaDelPopoloSelector,
+		Website:  "https://casadelpopolo.com/en",
+
+		Latitude:  45.519246,
+		Longitude: -73.584909,
 	},
 
 	"quai-des-brumes": {
 		Name:    "Quai des Brumes",
 		Address: "4481 Rue Saint-Denis",
-		Links: []string{
-			"https://quaidesbrumes.ca/calendrier/",
-		},
+
+		Link: "https://quaidesbrumes.ca/calendrier/",
 		AllowedDomains: []string{
 			"quaidesbrumes.ca",
 			"www.quaidesbrumes.ca",
 		},
+
 		Selector: QuaiDesBrumesSelector,
 		Website:  "https://quaidesbrumes.ca",
+
+		Latitude:  45.523917,
+		Longitude: -73.582513,
 	},
 
 	"cafe-campus": {
 		Name:    "Cafe Campus",
 		Address: "57 Rue Prince-Arthur Est",
-		Links: []string{
-			"https://spectacles.cafecampus.com/evenements",
-		},
+
+		Link: "https://spectacles.cafecampus.com/evenements",
 		AllowedDomains: []string{
 			"spectacles.cafecampus.com",
 			"www.spectacles.cafecampus.com",
 		},
+
 		Selector: CafeCampusSelector,
 		Website:  "https://www.cafecampus.com/",
+
+		Latitude:  45.514541,
+		Longitude: -73.572183,
 	},
 
 	"hemisphere-gauche": {
 		Name:    "L'Hemisphere Gauche",
 		Address: "221 Beaubien Est",
-		Links: []string{
-			"https://www.hemispheregauche.com/?lang=en",
-		},
+
+		Link: "https://www.hemispheregauche.com/?lang=en",
 		AllowedDomains: []string{
 			"hemispheregauche.com",
 			"www.hemispheregauche.com",
 		},
+
 		Selector: HemisphereGaucheSelector,
 		Website:  "https://www.hemispheregauche.com",
+
+		Latitude:  45.532241,
+		Longitude: -73.606866,
 	},
 
 	"verre-bouteille": {
 		Name:    "Le Verre Bouteille",
 		Address: "2112 Avenue du Mont-Royal Est",
-		Links: []string{
-			"https://verrebouteille.com/shows.php",
-		},
+
+		Link: "https://verrebouteille.com/shows.php",
 		AllowedDomains: []string{
 			"verrebouteille.com",
 			"www.verrebouteille.com",
 		},
+
 		Selector: VerreBouteilleSelector,
 		Website:  "https://verrebouteille.com",
+
+		Latitude:  45.535373,
+		Longitude: -73.572007,
 	},
 
 	"piranha-bar": {
 		Name:    "Piranha Bar",
 		Address: "680 Rue Sainte-Catherine Ouest",
-		Links: []string{
-			"https://www.piranhabar.ca/events",
-		},
+
+		Link: "https://www.piranhabar.ca/events",
 		AllowedDomains: []string{
 			"piranhabar.ca",
 			"www.piranhabar.ca",
 		},
+
 		Selector: PiranhaBarSelector,
 		Website:  "https://www.piranhabar.ca",
+
+		Latitude:  45.502818,
+		Longitude: -73.569794,
 	},
 
 	// JS-rendered
 	"turbo-haus": {
 		Name:    "Turbo Haüs",
 		Address: "2040 Rue Saint-Denis",
-		Links: []string{
-			"https://www.turbohaus.ca/cal",
-		},
+
+		Link: "https://www.turbohaus.ca/cal",
 		AllowedDomains: []string{
 			"turbohaus.ca",
 			"www.turbohaus.ca",
 		},
+
 		// no Selector - parse JSON
 		Website: "https://www.turbohaus.ca",
+
+		Latitude:  45.516304,
+		Longitude: -73.566101,
 	},
 }

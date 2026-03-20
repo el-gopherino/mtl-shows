@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}} -- mtl-shows</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <style>
+        #map { height: 350px; margin-bottom: 12px; border: 1px solid #ccc; }
         body {
             font-family: Verdana, Geneva, sans-serif;
             font-size: 12px;
@@ -71,6 +75,35 @@
         <a href="/this-weekend">This Weekend</a>
         <a href="/right-now">Right Now</a>
     </nav>
+
+    <div id="map"></div>
+
+    <script>
+        var map = L.map('map').setView([45.5236, -73.5985], 13);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        var venues = {{.VenuesJSON}};
+
+        venues.forEach(function(v) {
+            if (!v.lat || !v.lng) return;
+
+            var popupHTML = '<b>' + v.name + '</b>';
+            if (v.events && v.events.length > 0) {
+                popupHTML += '<br><br>';
+                v.events.forEach(function(e) {
+                    popupHTML += e.name + '<br><small>' + e.date + ' · ' + e.time + '</small><br>';
+                });
+            } else {
+                popupHTML += '<br><small>No events</small>';
+            }
+
+            L.marker([v.lat, v.lng]).addTo(map).bindPopup(popupHTML);
+        });
+
+    </script>
 
     <div class="filters">
         <a href="?">all venues</a> ·

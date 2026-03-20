@@ -34,9 +34,37 @@ func handlePage(title string, filter func(list EventList) EventList) http.Handle
 			events = events.ByVenue(venueFilter)
 		}
 
+		type markerEvent struct {
+			Name string `json:"name"`
+			Date string `json:"date"`
+			Time string `json:"time"`
+		}
+
+		type marker struct {
+			Name   string        `json:"name"`
+			Lat    float64       `json:"lat"`
+			Lng    float64       `json:"lng"`
+			Events []markerEvent `json:"events"`
+		}
+
+		var markers []marker
+		for key, venue := range allVenues {
+			m := marker{Name: venue.Name, Lat: venue.Latitude, Lng: venue.Longitude}
+			for _, e := range events.ByVenue(key) {
+				m.Events = append(m.Events, markerEvent{
+					Name: e.Name,
+					Date: e.Date,
+					Time: e.Time,
+				})
+			}
+			markers = append(markers, m)
+		}
+		jsonBytes, _ := json.Marshal(markers)
+
 		tmpl := template.Must(template.ParseFiles("templates/base.html"))
 		data := newPageData(title, events)
 		data.VenueFilter = venueFilter
+		data.VenuesJSON = template.JS(jsonBytes)
 		tmpl.ExecuteTemplate(w, "base", data)
 	}
 }
