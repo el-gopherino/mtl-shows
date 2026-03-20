@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var scheduleTime = 1 * time.Hour // scrape à chaque heure
+
 func main() {
 	now := time.Now()
 
@@ -34,7 +36,7 @@ func main() {
 		ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 		defer cancel()
 
-		go runOnSchedule(ctx, 1*time.Hour) // run scraper once every hour
+		go runOnSchedule(ctx, scheduleTime)
 
 		mux := http.NewServeMux()
 
@@ -60,11 +62,16 @@ func main() {
 		// allows to kill scheduler and port with ctrl+C
 		go func() {
 			<-ctx.Done()
-			srv.Shutdown(context.Background())
+			if err := srv.Shutdown(context.Background()); err != nil {
+				fmt.Println("error shutting down application.")
+				return
+			}
 		}()
 
 		fmt.Println("API server running on port :8080")
-		srv.ListenAndServe()
+		if err := srv.ListenAndServe(); err != nil {
+			return
+		}
 		return
 	}
 }
