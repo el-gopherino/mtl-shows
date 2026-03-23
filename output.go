@@ -100,17 +100,17 @@ func saveAllEventsToTextFile(events EventList, filename, venueName string) error
 		if e.Time != "" {
 			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
 		} else {
-			sb.WriteString(fmt.Sprintln("Time:      not available"))
+			sb.WriteString("Time:      not available\n")
 		}
 		if e.Price != "" {
 			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
 		} else {
-			sb.WriteString(fmt.Sprintln("Price:     not available."))
+			sb.WriteString("Price:     not available.\n")
 		}
 		if e.TicketURL != "" {
 			sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
 		} else {
-			sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+			sb.WriteString("Ticket Link:  not available\n\n\n")
 		}
 
 		// ---------------------------- detailed info ------------------------------
@@ -136,8 +136,8 @@ func saveHappeningRightNowEvents(events EventList, filename string) error {
 	var sb strings.Builder
 	sb.Grow(len(events) * 512)
 
-	sb.WriteString(fmt.Sprintln("# Shows & Events RIGHT NOW"))
-	sb.WriteString(fmt.Sprintln("----------------------------------------------\n"))
+	sb.WriteString("# Shows & Events RIGHT NOW\n")
+	sb.WriteString("----------------------------------------------\n\n")
 
 	count := 0
 	for _, e := range events {
@@ -150,17 +150,17 @@ func saveHappeningRightNowEvents(events EventList, filename string) error {
 		if e.Time != "" {
 			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
 		} else {
-			sb.WriteString(fmt.Sprintln("Time:      not available"))
+			sb.WriteString("Time:      not available\n")
 		}
 		if e.Price != "" {
 			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
 		} else {
-			sb.WriteString(fmt.Sprintln("Price:     not available"))
+			sb.WriteString("Price:     not available\n")
 		}
 		if e.TicketURL != "" {
 			sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
 		} else {
-			sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+			sb.WriteString("Ticket Link:  not available\n\n\n")
 		}
 		sb.WriteString(strings.Repeat("-", 90) + "\n\n")
 
@@ -173,8 +173,8 @@ func saveTonightEvents(events EventList, filename string) error {
 	var sb strings.Builder
 	sb.Grow(len(events) * 512)
 
-	sb.WriteString(fmt.Sprintln("# Shows & Events tonight"))
-	sb.WriteString(fmt.Sprintln("----------------------------------------------\n"))
+	sb.WriteString("# Shows & Events tonight\n")
+	sb.WriteString("----------------------------------------------\n\n")
 
 	count := 0
 	for _, e := range events {
@@ -187,17 +187,17 @@ func saveTonightEvents(events EventList, filename string) error {
 		if e.Time != "" {
 			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
 		} else {
-			sb.WriteString(fmt.Sprintln("Time:      not available"))
+			sb.WriteString("Time:      not available\n")
 		}
 		if e.Price != "" {
 			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
 		} else {
-			sb.WriteString(fmt.Sprintln("Price:     not available"))
+			sb.WriteString("Price:     not available\n")
 		}
 		if e.TicketURL != "" {
 			sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
 		} else {
-			sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+			sb.WriteString("Ticket Link:  not available\n\n\n")
 		}
 		sb.WriteString(strings.Repeat("-", 90) + "\n\n")
 
@@ -210,8 +210,8 @@ func saveTomorrowEvents(events EventList, filename string) error {
 	var sb strings.Builder
 	sb.Grow(len(events) * 512)
 
-	sb.WriteString(fmt.Sprintln("# Shows & Events tomorrow"))
-	sb.WriteString(fmt.Sprintln("----------------------------------------------\n"))
+	sb.WriteString("# Shows & Events tomorrow\n")
+	sb.WriteString("----------------------------------------------\n\n")
 
 	count := 0
 	for _, e := range events {
@@ -224,17 +224,17 @@ func saveTomorrowEvents(events EventList, filename string) error {
 		if e.Time != "" {
 			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
 		} else {
-			sb.WriteString(fmt.Sprintln("Time:      not available"))
+			sb.WriteString("Time:      not available\n")
 		}
 		if e.Price != "" {
 			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
 		} else {
-			sb.WriteString(fmt.Sprintln("Price:     not available"))
+			sb.WriteString("Price:     not available\n")
 		}
 		if e.TicketURL != "" {
 			sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
 		} else {
-			sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+			sb.WriteString("Ticket Link:  not available\n\n\n")
 		}
 		sb.WriteString(strings.Repeat("-", 90) + "\n\n")
 
@@ -247,8 +247,8 @@ func saveThisWeekEvents(events EventList, filename string) error {
 	var sb strings.Builder
 	sb.Grow(len(events) * 512)
 
-	sb.WriteString(fmt.Sprintln("# Shows & Events this week"))
-	sb.WriteString(fmt.Sprintln("----------------------------------------------\n"))
+	sb.WriteString("# Shows & Events this week\n")
+	sb.WriteString("----------------------------------------------\n\n")
 
 	count := 0
 	for _, e := range events {
@@ -261,17 +261,17 @@ func saveThisWeekEvents(events EventList, filename string) error {
 		if e.Time != "" {
 			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
 		} else {
-			sb.WriteString(fmt.Sprintln("Time:      not available"))
+			sb.WriteString("Time:      not available\n")
 		}
 		if e.Price != "" {
 			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
 		} else {
-			sb.WriteString(fmt.Sprintln("Price:     not available"))
+			sb.WriteString("Price:     not available\n")
 		}
 		if e.TicketURL != "" {
 			sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
 		} else {
-			sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+			sb.WriteString("Ticket Link:  not available\n\n\n")
 		}
 		sb.WriteString(strings.Repeat("-", 90) + "\n\n")
 
@@ -284,8 +284,8 @@ func saveThisWeekendEvents(events EventList, filename string) error {
 	var sb strings.Builder
 	sb.Grow(len(events) * 512)
 
-	sb.WriteString(fmt.Sprintln("# Shows & Events this weekend"))
-	sb.WriteString(fmt.Sprintln("----------------------------------------------\n"))
+	sb.WriteString("# Shows & Events this weekend\n")
+	sb.WriteString("----------------------------------------------\n\n")
 
 	count := 0
 	for _, e := range events {
@@ -298,17 +298,17 @@ func saveThisWeekendEvents(events EventList, filename string) error {
 		if e.Time != "" {
 			sb.WriteString(fmt.Sprintf("Time:      %s\n", e.Time))
 		} else {
-			sb.WriteString(fmt.Sprintln("Time:      not available"))
+			sb.WriteString("Time:      not available\n")
 		}
 		if e.Price != "" {
 			sb.WriteString(fmt.Sprintf("Price:     %s\n", e.Price))
 		} else {
-			sb.WriteString(fmt.Sprintln("Price:     not available"))
+			sb.WriteString("Price:     not available\n")
 		}
 		if e.TicketURL != "" {
 			sb.WriteString(fmt.Sprintf("Ticket Link:  %s\n\n", e.TicketURL))
 		} else {
-			sb.WriteString(fmt.Sprintln("Ticket Link:  not available\n\n"))
+			sb.WriteString("Ticket Link:  not available\n\n\n")
 		}
 		sb.WriteString(strings.Repeat("-", 90) + "\n\n")
 	}

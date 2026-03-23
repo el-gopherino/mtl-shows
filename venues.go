@@ -4,6 +4,7 @@ type Venue struct {
 	Name           string
 	Group          string // group related venues (multiple venues for a single website) this is rare
 	Link           string
+	Website        string
 	AllowedDomains []string
 	Selector       string // CSS selector for events on page
 
@@ -13,7 +14,6 @@ type Venue struct {
 
 	Address      string
 	Neighborhood string
-	Website      string
 }
 
 // venue websites' CSS selectors for colly scraper -> event info + logo
@@ -26,7 +26,6 @@ const (
 	PiranhaBarSelector       = "article.eventlist-event"
 )
 
-// URLs for Squarespace powered venues
 const (
 	TurboHausURL = "https://www.turbohaus.ca/calendrier?format=json"
 )

@@ -8,27 +8,25 @@ import (
 
 type Event struct {
 	// Externe
-	VenueKey string `json:"venue_key"` // key for venue map
-	Name     string `json:"name"`
-	Venue    string `json:"venue"`
-	Date     string `json:"date"`
-	Address  string `json:"address"`
-
+	VenueKey   string `json:"venue_key"` // key for venue map
+	Name       string `json:"name"`
+	Venue      string `json:"venue"`
+	Date       string `json:"date"`
+	Address    string `json:"address"`
 	Time       string `json:"time,omitempty"`
 	Price      string `json:"price,omitempty"`
 	TicketURL  string `json:"ticket_url,omitempty"`
 	EventImage string `json:"event_image,omitempty"`
+	DayOfWeek  string `json:"day_of_week"`
 
-	DayOfWeek     string `json:"day_of_week"`
-	IsFree        bool   `json:"is_free"`
-	IsToday       bool   `json:"is_today"`
-	IsTomorrow    bool   `json:"is_tomorrow"`
-	IsThisWeekend bool   `json:"is_this_weekend"`
-	IsThisWeek    bool   `json:"is_this_week"`
+	IsFree        bool `json:"is_free"`
+	IsToday       bool `json:"is_today"`
+	IsTomorrow    bool `json:"is_tomorrow"`
+	IsThisWeekend bool `json:"is_this_weekend"`
+	IsThisWeek    bool `json:"is_this_week"`
 
-	// internal
-	ParsedDate      time.Time `json:"-"`
 	PriceValue      float64   `json:"-"`
+	ParsedDate      time.Time `json:"-"`
 	DaysUntil       int       `json:"-"`
 	AlreadyHappened bool      `json:"-"`
 	IsRightNow      bool      `json:"-"`
@@ -109,21 +107,21 @@ func (el EventList) SortByPrice() {
 	})
 }
 
-// RightNow returns events still happening from 1 an hour ago, and events happening within 3 hours of current time
+// RightNow returns events still happening from 1 an hour ago, and events happening within 2 hours of current time
 func (el EventList) RightNow() (result EventList) {
 	now := time.Now().In(loc)
 
 	for _, e := range el {
 		eventStart := combineDateAndTime(e.ParsedDate, e.Time)
 		if eventStart.IsZero() {
-			continue // cant parse -> skip
+			continue // cant parse, skip.
 		}
 
 		// Event started up to 1 hour ago (likely still happening)
 		startedRecently := eventStart.After(now.Add(-1*time.Hour)) && eventStart.Before(now)
 
 		// Event starts within the next 3 hours
-		startsSoon := eventStart.After(now) && eventStart.Before(now.Add(3*time.Hour))
+		startsSoon := eventStart.After(now) && eventStart.Before(now.Add(2*time.Hour))
 
 		if startedRecently || startsSoon {
 			result = append(result, e)

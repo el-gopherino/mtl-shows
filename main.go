@@ -132,7 +132,7 @@ func runOnSchedule(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	// scrape immediately on startup
+	// scrape immediately
 	runConcurrent()
 
 	for {
