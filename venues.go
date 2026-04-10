@@ -2,18 +2,17 @@ package main
 
 type Venue struct {
 	Name           string
+	Address        string
+	Neighborhood   string
 	Group          string // group related venues (multiple venues for a single website) this is rare
 	Link           string
-	Website        string
 	AllowedDomains []string
-	Selector       string // CSS selector for events on page
+	Selector       string // CSS selector for events on page -- Colly
+	Website        string
 
 	// for interactive map
 	Latitude  float64
 	Longitude float64
-
-	Address      string
-	Neighborhood string
 }
 
 // CSS selectors for colly
@@ -25,6 +24,7 @@ const (
 	VerreBouteilleSelector   = "div.card-container"
 	PiranhaBarSelector       = "article.eventlist-event"
 	ClubSodaSelector         = "div.card.h-100"
+	LeMinistereSelector      = "div.col-sm-6.col-lg-4.mb-4"
 )
 
 // API endpoints for JS-rendered venue websites
@@ -224,6 +224,23 @@ var allVenues = map[string]Venue{
 		Longitude: -73.563217,
 	},
 
+	"le-ministere": {
+		Name:    "Le Ministère",
+		Address: "4521 Boul. Saint-Laurent",
+
+		Link: "https://leministere.ca/evenements",
+		AllowedDomains: []string{
+			"leministere.ca",
+			"www.leministere.ca",
+		},
+
+		Selector: LeMinistereSelector,
+		Website:  "https://leministere.ca",
+
+		Latitude:  45.520459,
+		Longitude: -73.586783,
+	},
+
 	"mtelus": {
 		Name:    "MTelus",
 		Address: "59 Rue Sainte-Catherine Est",
@@ -241,7 +258,6 @@ var allVenues = map[string]Venue{
 		Longitude: -73.56321,
 	},
 
-	// JS-rendered
 	"turbo-haus": {
 		Name:    "Turbo Haüs",
 		Address: "2040 Rue Saint-Denis",

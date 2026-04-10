@@ -29,6 +29,7 @@ go build -o mtl-shows .
 - Casa del Popolo
 - Club Soda
 - L'Hemisphere Gauche
+- Le Ministère
 - MTelus
 - Piranha Bar
 - P'tit Ours
