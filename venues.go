@@ -222,6 +222,23 @@ var allVenues = map[string]Venue{
 		Longitude: -73.563217,
 	},
 
+	"mtelus": {
+		Name:    "MTelus",
+		Address: "59 Rue Sainte-Catherine Est",
+
+		Link: "https://mtelus.com/en/events?display=list",
+		AllowedDomains: []string{
+			"mtelus.com",
+			"www.mtelus.com",
+		},
+
+		// no Selector - parse JSON (JS-rendered)
+		Website: "https://mtelus.com",
+
+		Latitude:  45.510586,
+		Longitude: -73.56321,
+	},
+
 	// JS-rendered
 	"turbo-haus": {
 		Name:    "Turbo Haüs",
