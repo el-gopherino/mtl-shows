@@ -28,7 +28,8 @@ const (
 )
 
 const (
-	TurboHausURL = "https://www.turbohaus.ca/calendrier?format=json"
+	TurboHausURL  = "https://www.turbohaus.ca/calendrier?format=json"
+	mtelusAPIBase = "https://mtelus.com/api/algolia/search?query="
 )
 
 var allVenues = map[string]Venue{

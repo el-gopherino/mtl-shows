@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-const mtelusAPIBase = "https://mtelus.com/api/algolia/search?query="
-
 type mtelusResponse struct {
 	Hits    []mtelusHit `json:"hits"`
 	NbHits  int         `json:"nbHits"`
