@@ -32,6 +32,8 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 		e = parseVerreBouteille(h)
 	case "piranha-bar":
 		e = parsePiranhaBar(h)
+	case "club-soda":
+		e = parseClubSoda(h)
 	default:
 		fmt.Printf("ERROR: no parser for [%q]. Returning empty event...\n", venueKey)
 		return Event{}, nil
@@ -255,6 +257,27 @@ func parseVerreBouteille(h *colly.HTMLElement) Event {
 		Time:       eventTime,
 		TicketURL:  ticketURL,
 		EventImage: eventImage,
+	}
+
+	e.enrichEvent()
+	return e
+}
+
+func parseClubSoda(h *colly.HTMLElement) Event {
+
+	ticketURL := h.ChildAttr("a.stretched-link", "href")
+	if ticketURL != "" && !strings.HasPrefix(ticketURL, "http") {
+		ticketURL = "https://clubsoda.ca" + ticketURL
+	}
+
+	e := Event{
+		VenueKey:   "club-soda",
+		Name:       strings.TrimSpace(h.ChildText("h2.card-title")),
+		Date:       strings.TrimSpace(h.ChildText("p.card-subtitle")),
+		Venue:      "Club Soda",
+		Address:    "1225 Boul. Saint-Laurent",
+		TicketURL:  ticketURL,
+		EventImage: h.ChildAttr("div.card-img-top img", "src"),
 	}
 
 	e.enrichEvent()

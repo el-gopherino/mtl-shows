@@ -24,6 +24,7 @@ const (
 	HemisphereGaucheSelector = "div.IFphb0"
 	VerreBouteilleSelector   = "div.card-container"
 	PiranhaBarSelector       = "article.eventlist-event"
+	ClubSodaSelector         = "div.card.h-100"
 )
 
 const (
@@ -202,6 +203,23 @@ var allVenues = map[string]Venue{
 
 		Latitude:  45.502818,
 		Longitude: -73.569794,
+	},
+
+	"club-soda": {
+		Name:    "Club Soda",
+		Address: "1225 Boul. Saint-Laurent",
+
+		Link: "https://clubsoda.ca/fr/evenements",
+		AllowedDomains: []string{
+			"clubsoda.ca",
+			"www.clubsoda.ca",
+		},
+
+		Selector: ClubSodaSelector,
+		Website:  "https://clubsoda.ca",
+
+		Latitude:  45.509597,
+		Longitude: -73.563217,
 	},
 
 	// JS-rendered
