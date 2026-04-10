@@ -14,7 +14,7 @@
             font-family: Verdana, Geneva, sans-serif;
             font-size: 12px;
             max-width: 700px;
-            margin: 10px auto;
+            margin: 10px auto 10px 200px;
             background: #fff;
             color: #333;
         }
@@ -27,18 +27,40 @@
             font-size: 13px;
             color: #555;
         }
-        nav {
-            padding: 4px 0;
-            margin-bottom: 8px;
+        .sidebar {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 170px;
+            overflow-y: auto;
+            max-height: calc(100vh - 20px);
         }
-        nav a {
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 12px;
+        }
+        .filter-group-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .filter-group a {
             color: #0000EE;
-            margin-right: 8px;
-            font-size: 11px;
+            font-size: 12px;
+            text-decoration: none;
+            line-height: 1.6;
         }
-        nav a:visited {
-            color: #551A8B;
+        .filter-group a:hover {
+            text-decoration: underline;
         }
+        /*.filter-group a:visited {*/
+        /*    color: #551A8B;*/
+        /*}*/
         .updated {
             font-size: 10px;
             color: #888;
@@ -66,64 +88,37 @@
     </style>
 </head>
 <body>
-    <h1>mtl-shows</h1>
-    <nav>
-        <a href="/">All</a>
-        <a href="/tonight">Tonight</a>
-        <a href="/tomorrow">Tomorrow</a>
-        <a href="/this-week">This Week</a>
-        <a href="/this-weekend">This Weekend</a>
-        <a href="/right-now">Right Now</a>
+    <nav class="sidebar">
+        <div class="filter-group">
+            <span class="filter-group-title">When</span>
+            <a href="/">All</a>
+            <a href="/tonight">Tonight</a>
+            <a href="/tomorrow">Tomorrow</a>
+            <a href="/this-week">This Week</a>
+            <a href="/this-weekend">This Weekend</a>
+            <a href="/right-now">Right Now</a>
+        </div>
+        <div class="filter-group">
+            <span class="filter-group-title">Venue</span>
+            <a href="?venue=cafe-campus">Cafe Campus</a>
+            <a href="?venue=casa-del-popolo">Casa del Popolo</a>
+            <a href="?venue=club-soda">Club Soda</a>
+            <a href="?venue=fairmount-theatre">Fairmount Theatre</a>
+            <a href="?venue=hemisphere-gauche">L'Hemisphere Gauche</a>
+            <a href="?venue=le-ministere">Le Ministere</a>
+            <a href="?venue=mtelus">MTelus</a>
+            <a href="?venue=piranha-bar">Piranha Bar</a>
+            <a href="?venue=ptit-ours">P'tit Ours</a>
+            <a href="?venue=quai-des-brumes">Quai des Brumes</a>
+            <a href="?venue=la-sala-rossa">La Sala Rossa</a>
+            <a href="?venue=la-sotterenea">La Sotterenea</a>
+            <a href="?venue=la-toscadura">La Toscadura</a>
+            <a href="?venue=turbo-haus">Turbo Haus</a>
+            <a href="?venue=verre-bouteille">Le Verre Bouteille</a>
+        </div>
     </nav>
 
-    <div id="map"></div>
-
-    <script>
-        var map = L.map('map').setView([45.5236, -73.5985], 13);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(map);
-
-        var venues = {{.VenuesJSON}};
-
-        venues.forEach(function(v) {
-            if (!v.lat || !v.lng) return;
-
-            var popupHTML = '<b>' + v.name + '</b>';
-            if (v.events && v.events.length > 0) {
-                popupHTML += '<br><br>';
-                v.events.forEach(function(e) {
-                    popupHTML += e.name + '<br><small>' + e.date + ' · ' + e.time + '</small><br>';
-                });
-            } else {
-                popupHTML += '<br><small>No events</small>';
-            }
-
-            L.marker([v.lat, v.lng]).addTo(map).bindPopup(popupHTML);
-        });
-
-    </script>
-
-    <div class="filters">
-        <a href="?">all venues</a> ·
-        <a href="?venue=cafe-campus">Cafe Campus</a> ·
-        <a href="?venue=casa-del-popolo">Casa del Popolo</a> ·
-        <a href="?venue=club-soda">Club Soda</a> .
-        <a href="?venue=fairmount-theatre">Fairmount Theatre</a>  .
-        <a href="?venue=hemisphere-gauche">L'Hemisphere Gauche</a> ·
-        <a href="?venue=le-ministere">Le Ministère</a>  .
-        <a href="?venue=mtelus">MTelus</a>  .
-        <a href="?venue=piranha-bar">Piranha Bar</a>  .
-        <a href="?venue=ptit-ours">P'tit Ours</a> ·
-        <a href="?venue=quai-des-brumes">Quai des Brumes</a> ·
-        <a href="?venue=la-sala-rossa">La Sala Rossa</a> ·
-        <a href="?venue=la-sotterenea">La Sotterenea</a> ·
-        <a href="?venue=la-toscadura">La Toscadura</a> ·
-        <a href="?venue=turbo-haus">Turbo Haüs</a>  .
-        <a href="?venue=verre-bouteille">Le Verre Bouteille</a>
-
-    </div>
+    <h1>mtl-shows</h1>
 
     <h2>{{.Title}} ({{.EventCount}})</h2>
     <p class="updated">Updated: {{.GeneratedAt}}</p>
@@ -142,6 +137,60 @@
     {{else}}
     <p>No events found.</p>
     {{end}}
+
+    <h2>Map</h2>
+    <div id="map"></div>
+
+    <script>
+        var map = L.map('map').setView([45.5236, -73.5985], 13);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        function markerColor(v) {
+            if (!v.events || v.events.length === 0) return 'grey';
+            for (var i = 0; i < v.events.length; i++) {
+                if (v.events[i].is_today) return 'red';
+            }
+            for (var i = 0; i < v.events.length; i++) {
+                if (v.events[i].is_this_week) return 'orange';
+            }
+            return 'blue';
+        }
+
+        function coloredIcon(color) {
+            return new L.Icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' + color + '.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+        }
+
+        var venues = {{.VenuesJSON}};
+
+        venues.forEach(function(v) {
+            if (!v.lat || !v.lng) return;
+
+            var color = markerColor(v);
+            var popupHTML = '<b>' + v.name + '</b>';
+            popupHTML += '<br><a href="?venue=' + v.key + '" style="font-size:10px;">Show events</a>';
+
+            if (v.events && v.events.length > 0) {
+                popupHTML += '<br>';
+                v.events.forEach(function(e) {
+                    popupHTML += '<br>' + e.name + '<br><small>' + e.date + ' · ' + e.time + '</small>';
+                });
+            } else {
+                popupHTML += '<br><small>No upcoming events</small>';
+            }
+
+            L.marker([v.lat, v.lng], {icon: coloredIcon(color)}).addTo(map).bindPopup(popupHTML);
+        });
+    </script>
 </body>
 </html>
 {{end}}

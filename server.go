@@ -35,13 +35,16 @@ func handlePage(title string, filter func(list EventList) EventList) http.Handle
 		}
 
 		type markerEvent struct {
-			Name string `json:"name"`
-			Date string `json:"date"`
-			Time string `json:"time"`
+			Name       string `json:"name"`
+			Date       string `json:"date"`
+			Time       string `json:"time"`
+			IsToday    bool   `json:"is_today"`
+			IsThisWeek bool   `json:"is_this_week"`
 		}
 
 		type marker struct {
 			Name   string        `json:"name"`
+			Key    string        `json:"key"`
 			Lat    float64       `json:"lat"`
 			Lng    float64       `json:"lng"`
 			Events []markerEvent `json:"events"`
@@ -49,12 +52,14 @@ func handlePage(title string, filter func(list EventList) EventList) http.Handle
 
 		var markers []marker
 		for key, venue := range allVenues {
-			m := marker{Name: venue.Name, Lat: venue.Latitude, Lng: venue.Longitude}
+			m := marker{Name: venue.Name, Key: key, Lat: venue.Latitude, Lng: venue.Longitude}
 			for _, e := range events.ByVenue(key) {
 				m.Events = append(m.Events, markerEvent{
-					Name: e.Name,
-					Date: e.Date,
-					Time: e.Time,
+					Name:       e.Name,
+					Date:       e.Date,
+					Time:       e.Time,
+					IsToday:    e.IsToday,
+					IsThisWeek: e.IsThisWeek,
 				})
 			}
 			markers = append(markers, m)

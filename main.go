@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var scheduleTime = 1 * time.Hour // scrape à chaque heure
+var scrapeSchedule = 1 * time.Hour // scrape à chaque heure
 
 func main() {
 	now := time.Now()
@@ -36,7 +36,7 @@ func main() {
 		ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 		defer cancel()
 
-		go runOnSchedule(ctx, scheduleTime)
+		go runOnSchedule(ctx, scrapeSchedule)
 
 		mux := http.NewServeMux()
 
