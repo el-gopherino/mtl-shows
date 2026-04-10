@@ -25,6 +25,7 @@ const (
 	PiranhaBarSelector       = "article.eventlist-event"
 	ClubSodaSelector         = "div.card.h-100"
 	LeMinistereSelector      = "div.col-sm-6.col-lg-4.mb-4"
+	FairmountTheatreSelector = "article.eventlist-event--upcoming"
 )
 
 // API endpoints for JS-rendered venue websites
@@ -239,6 +240,23 @@ var allVenues = map[string]Venue{
 
 		Latitude:  45.520459,
 		Longitude: -73.586783,
+	},
+
+	"fairmount-theatre": {
+		Name:    "Fairmount Theatre",
+		Address: "5240 Avenue du Parc",
+
+		Link: "https://www.theatrefairmount.com/",
+		AllowedDomains: []string{
+			"theatrefairmount.com",
+			"www.theatrefairmount.com",
+		},
+
+		Selector: FairmountTheatreSelector,
+		Website:  "https://www.theatrefairmount.com/",
+
+		Latitude:  45.520477,
+		Longitude: -73.598509,
 	},
 
 	"mtelus": {

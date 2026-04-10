@@ -28,6 +28,7 @@ go build -o mtl-shows .
 - Cafe Campus
 - Casa del Popolo
 - Club Soda
+- Fairmount Theatre
 - L'Hemisphere Gauche
 - Le Ministère
 - MTelus

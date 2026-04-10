@@ -36,6 +36,8 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 		e = parseClubSoda(h)
 	case "le-ministere":
 		e = parseLeMinistere(h)
+	case "fairmount-theatre":
+		e = parseFairmountTheatre(h)
 	default:
 		fmt.Printf("ERROR: no parser for [%q]. Returning empty event...\n", venueKey)
 		return Event{}, nil
@@ -301,6 +303,33 @@ func parseLeMinistere(h *colly.HTMLElement) Event {
 		Address:    "4521 Boul. Saint-Laurent",
 		TicketURL:  ticketURL,
 		EventImage: h.ChildAttr("div.card-img-top img", "src"),
+	}
+
+	e.enrichEvent()
+	return e
+}
+
+func parseFairmountTheatre(h *colly.HTMLElement) Event {
+
+	// artist name is in the description h2, not in h1.eventlist-title (which is just the French date)
+	name := strings.TrimSpace(h.DOM.Find("div.eventlist-description h2").First().Text())
+
+	// "8:00 p.m." -> "8:00 PM"
+	showTime := strings.TrimSpace(h.DOM.Find("time.event-time-localized-start").First().Text())
+	showTime = strings.ReplaceAll(showTime, "p.m.", "PM")
+	showTime = strings.ReplaceAll(showTime, "a.m.", "AM")
+
+	ticketURL := h.DOM.Find("div.sqs-block-button-container a.sqs-block-button-element").First().AttrOr("href", "")
+
+	e := Event{
+		VenueKey:   "fairmount-theatre",
+		Name:       name,
+		Date:       strings.TrimSpace(h.DOM.Find("time.event-date").First().Text()),
+		Venue:      "Théâtre Fairmount",
+		Address:    "5240 Avenue du Parc",
+		Time:       showTime,
+		TicketURL:  ticketURL,
+		EventImage: h.DOM.Find("a.eventlist-column-thumbnail img").First().AttrOr("src", ""),
 	}
 
 	e.enrichEvent()
