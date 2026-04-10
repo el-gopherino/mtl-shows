@@ -16,7 +16,7 @@ type Venue struct {
 	Neighborhood string
 }
 
-// venue websites' CSS selectors for colly scraper -> event info + logo
+// CSS selectors for colly
 const (
 	CasaDelPopoloSelector    = "div.md\\:w-5\\/12.p-6"
 	QuaiDesBrumesSelector    = "article.mec-event-article"
@@ -27,6 +27,7 @@ const (
 	ClubSodaSelector         = "div.card.h-100"
 )
 
+// API endpoints for JS-rendered venue websites
 const (
 	TurboHausURL  = "https://www.turbohaus.ca/calendrier?format=json"
 	mtelusAPIBase = "https://mtelus.com/api/algolia/search?query="

@@ -25,14 +25,16 @@ go build -o mtl-shows .
 
 ## Venues
 
+- Cafe Campus
 - Casa del Popolo
+- Club Soda
+- L'Hemisphere Gauche
+- MTelus
+- Piranha Bar
+- P'tit Ours
+- Quai des Brumes
 - La Sala Rossa
 - La Sotterenea
-- P'tit Ours
 - La Toscadura
-- Quai des Brumes
-- Cafe Campus
-- L'Hemisphere Gauche
-- Le Verre Bouteille
 - Turbo Haüs
-- Piranha Bar
+- Le Verre Bouteille
