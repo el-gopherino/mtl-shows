@@ -1,6 +1,6 @@
 module github.com/el-gopherino/mtl-shows
 
-go 1.26
+go 1.26.2
 
 require github.com/gocolly/colly/v2 v2.3.0
 
