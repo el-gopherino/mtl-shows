@@ -12,16 +12,8 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 	var e Event
 
 	switch venueKey {
-	case "casa-del-popolo":
-		e = parseCasaDelPopolo(h)
-	case "la-sala-rossa":
-		e = parseSalaRossa(h)
-	case "la-sotterenea":
-		e = parseLaSotterenea(h)
-	case "ptit-ours":
-		e = parsePtitOurs(h)
-	case "la-toscadura":
-		e = parseLaToscadura(h)
+	case "casa-del-popolo", "la-sala-rossa", "la-sotterenea", "ptit-ours", "la-toscadura":
+		e = parseCasaGroup(h, venueKey)
 	case "cafe-campus":
 		e = parseCafeCampus(h)
 	case "quai-des-brumes":
@@ -46,12 +38,12 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 	return e, e.validateEvent()
 }
 
-func parseCasaDelPopolo(h *colly.HTMLElement) Event {
+func parseCasaGroup(h *colly.HTMLElement, venueKey string) Event {
 	children := h.DOM.Children().Filter("div")
 	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
 
 	e := Event{
-		VenueKey:   "casa-del-popolo",
+		VenueKey:   venueKey,
 		Name:       strings.TrimSpace(children.Eq(1).Text()),
 		Date:       strings.TrimSpace(children.Eq(0).Text()),
 		Venue:      strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
@@ -62,87 +54,6 @@ func parseCasaDelPopolo(h *colly.HTMLElement) Event {
 		EventImage: eventImage,
 	}
 	e.enrichEvent()
-
-	return e
-}
-
-func parseSalaRossa(h *colly.HTMLElement) Event {
-	children := h.DOM.Children().Filter("div")
-	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
-
-	e := Event{
-		VenueKey:   "la-sala-rossa",
-		Name:       strings.TrimSpace(children.Eq(1).Text()),
-		Date:       strings.TrimSpace(children.Eq(0).Text()),
-		Venue:      strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
-		Address:    strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
-		Time:       strings.TrimSpace(children.Eq(3).Text()),
-		Price:      strings.TrimSpace(children.Eq(4).Text()),
-		TicketURL:  h.ChildAttr("a.btn-inverse", "href"),
-		EventImage: eventImage,
-	}
-	e.enrichEvent()
-
-	return e
-}
-
-func parseLaSotterenea(h *colly.HTMLElement) Event {
-	children := h.DOM.Children().Filter("div")
-	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
-
-	e := Event{
-		VenueKey:   "la-sotterenea",
-		Name:       strings.TrimSpace(children.Eq(1).Text()),
-		Date:       strings.TrimSpace(children.Eq(0).Text()),
-		Venue:      strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
-		Address:    strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
-		Time:       strings.TrimSpace(children.Eq(3).Text()),
-		Price:      strings.TrimSpace(children.Eq(4).Text()),
-		TicketURL:  h.ChildAttr("a.btn-inverse", "href"),
-		EventImage: eventImage,
-	}
-	e.enrichEvent()
-
-	return e
-}
-
-func parsePtitOurs(h *colly.HTMLElement) Event {
-	children := h.DOM.Children().Filter("div")
-	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
-
-	e := Event{
-		VenueKey:   "ptit-ours",
-		Name:       strings.TrimSpace(children.Eq(1).Text()),
-		Date:       strings.TrimSpace(children.Eq(0).Text()),
-		Venue:      strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
-		Address:    strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
-		Time:       strings.TrimSpace(children.Eq(3).Text()),
-		Price:      strings.TrimSpace(children.Eq(4).Text()),
-		TicketURL:  h.ChildAttr("a.btn-inverse", "href"),
-		EventImage: eventImage,
-	}
-	e.enrichEvent()
-
-	return e
-}
-
-func parseLaToscadura(h *colly.HTMLElement) Event {
-	children := h.DOM.Children().Filter("div")
-	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
-
-	e := Event{
-		VenueKey:   "la-toscadura",
-		Name:       strings.TrimSpace(children.Eq(1).Text()),
-		Date:       strings.TrimSpace(children.Eq(0).Text()),
-		Venue:      strings.TrimSpace(children.Eq(2).Find("div").First().Text()),
-		Address:    strings.TrimSpace(children.Eq(2).Find("div").Last().Text()),
-		Time:       strings.TrimSpace(children.Eq(3).Text()),
-		Price:      strings.TrimSpace(children.Eq(4).Text()),
-		TicketURL:  h.ChildAttr("a.btn-inverse", "href"),
-		EventImage: eventImage,
-	}
-	e.enrichEvent()
-
 	return e
 }
 

@@ -9,9 +9,17 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"unsafe"
 )
 
 var scrapeSchedule = 1 * time.Hour // scrape à chaque heure
+
+func printSizes() {
+	fmt.Println("Event size: ", unsafe.Sizeof(Event{}))
+	fmt.Println("Venue size: ", unsafe.Sizeof(Venue{}))
+	fmt.Println(unsafe.Sizeof(frenchDayReplacer))
+	fmt.Println(unsafe.Sizeof(frenchMonthReplacer))
+}
 
 func main() {
 	now := time.Now()
@@ -46,16 +54,19 @@ func main() {
 		mux.HandleFunc("/tomorrow", handlePage("Tomorrow", EventList.Tomorrow))
 		mux.HandleFunc("/this-week", handlePage("This Week", EventList.ThisWeek))
 		mux.HandleFunc("/this-weekend", handlePage("This Weekend", EventList.ThisWeekend))
-		mux.HandleFunc("/this-weekend/friday", handlePage("This Weekend — Friday", EventList.ThisWeekendFriday))
-		mux.HandleFunc("/this-weekend/saturday", handlePage("This Weekend — Saturday", EventList.ThisWeekendSaturday))
-		mux.HandleFunc("/this-weekend/sunday", handlePage("This Weekend — Sunday", EventList.ThisWeekendSunday))
 
-		//mux.HandleFunc("/events", handleAllEvents)
-		//mux.HandleFunc("/events/right-now", handleRightNow)
-		//mux.HandleFunc("/events/tonight", handleTonight)
-		//mux.HandleFunc("/events/tomorrow", handleTomorrow)
-		//mux.HandleFunc("/events/this-week", handleThisWeek)
-		//mux.HandleFunc("/events/this-weekend", handleThisWeekend)
+		mux.HandleFunc("/this-weekend/friday", handlePage("This Weekend — Friday",
+			func(el EventList) EventList {
+				return el.ThisWeekend().ByWeekday(time.Friday)
+			}))
+		mux.HandleFunc("/this-weekend/saturday", handlePage("This Weekend — Saturday",
+			func(el EventList) EventList {
+				return el.ThisWeekend().ByWeekday(time.Saturday)
+			}))
+		mux.HandleFunc("/this-weekend/sunday", handlePage("This Weekend — Sunday",
+			func(el EventList) EventList {
+				return el.ThisWeekend().ByWeekday(time.Sunday)
+			}))
 
 		srv := &http.Server{
 			Addr:    ":8080",
