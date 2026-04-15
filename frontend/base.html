@@ -100,6 +100,7 @@
         <div class="filter-group">
             <span class="filter-group-title">When</span>
             <a href="/">All</a>
+            <br>
             <a href="/right-now">Right Now</a>
             <a href="/tonight">Tonight</a>
             <a href="/tomorrow">Tomorrow</a>
@@ -137,7 +138,9 @@
     <h1>mtl-shows</h1>
 
     <h2>{{.Title}} ({{.EventCount}})</h2>
-    <p class="updated">Updated: {{.GeneratedAt}}</p>
+    <p class="updated">
+        {{if .LastScrapedAt}}Last updated: {{.LastScrapedAt}}{{else}}Scraping…{{end}}
+    </p>
 
     {{if .Events}}
     {{range .Events}}

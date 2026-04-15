@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 func saveAllEvents(allEvents map[string]EventList) {
-
 	for _, dir := range []string{"right_now", "tonight", "tomorrow", "this_week", "this_weekend", "output"} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			fmt.Printf("Failed to create right_now directory: %v\n", err)
+			fmt.Printf("Failed to create %s directory: %v\n", dir, err)
 			return
 		}
 	}
@@ -24,7 +24,12 @@ func saveAllEvents(allEvents map[string]EventList) {
 		}
 	}
 
-	var allEventsList EventList
+	totalEvents := 0
+	for _, events := range allEvents {
+		totalEvents += len(events)
+	}
+	allEventsList := make(EventList, 0, totalEvents)
+
 	for venueKey, event := range allEvents {
 		venue := allVenues[venueKey]
 
@@ -44,6 +49,8 @@ func saveAllEvents(allEvents map[string]EventList) {
 	// update cached events for the API
 	mu.Lock()
 	cachedEvents = allEventsList
+	cachedMarkers = buildMarkers(allEventsList)
+	lastScrapedAt = time.Now().In(loc)
 	mu.Unlock()
 
 	// all Jason output

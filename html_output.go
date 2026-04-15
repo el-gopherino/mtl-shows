@@ -6,12 +6,13 @@ import (
 )
 
 type PageData struct {
-	Title       string
-	Events      EventList
-	EventCount  int
-	GeneratedAt string
-	VenueFilter string
-	VenuesJSON  template.JS // JSON array of venues with coordinates + their events
+	Title         string
+	Events        EventList
+	EventCount    int
+	GeneratedAt   string
+	LastScrapedAt string
+	VenueFilter   string
+	VenuesJSON    template.JS // JSON array of venues with coordinates + their events
 }
 
 func newPageData(title string, events EventList) PageData {

@@ -196,3 +196,12 @@ func (el EventList) ByVenue(venueKey string) (result EventList) {
 	}
 	return result
 }
+
+// GroupByVenue indexes events by VenueKey in a single pass.
+func (el EventList) GroupByVenue() map[string]EventList {
+	result := make(map[string]EventList, len(allVenues))
+	for _, e := range el {
+		result[e.VenueKey] = append(result[e.VenueKey], e)
+	}
+	return result
+}

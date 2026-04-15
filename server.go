@@ -5,11 +5,30 @@ import (
 	"html/template"
 	"net/http"
 	"sync"
+	"time"
 )
 
+type markerEvent struct {
+	Name       string `json:"name"`
+	Date       string `json:"date"`
+	Time       string `json:"time"`
+	IsToday    bool   `json:"is_today"`
+	IsThisWeek bool   `json:"is_this_week"`
+}
+
+type marker struct {
+	Name   string        `json:"name"`
+	Key    string        `json:"key"`
+	Lat    float64       `json:"lat"`
+	Lng    float64       `json:"lng"`
+	Events []markerEvent `json:"events"`
+}
+
 var (
-	cachedEvents EventList
-	mu           sync.RWMutex
+	cachedEvents  EventList
+	cachedMarkers template.JS
+	lastScrapedAt time.Time
+	mu            sync.RWMutex
 )
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -23,10 +42,32 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func buildMarkers(events EventList) template.JS {
+	byVenue := events.GroupByVenue()
+	markers := make([]marker, 0, len(allVenues))
+	for key, venue := range allVenues {
+		m := marker{Name: venue.Name, Key: key, Lat: venue.Latitude, Lng: venue.Longitude}
+		for _, e := range byVenue[key] {
+			m.Events = append(m.Events, markerEvent{
+				Name:       e.Name,
+				Date:       e.Date,
+				Time:       e.Time,
+				IsToday:    e.IsToday,
+				IsThisWeek: e.IsThisWeek,
+			})
+		}
+		markers = append(markers, m)
+	}
+	b, _ := json.Marshal(markers)
+	return template.JS(b)
+}
+
 func handlePage(title string, filter func(list EventList) EventList) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		mu.RLock()
 		events := filter(cachedEvents)
+		venuesJSON := cachedMarkers
+		scraped := lastScrapedAt
 		mu.RUnlock()
 
 		venueFilter := r.URL.Query().Get("venue")
@@ -34,42 +75,14 @@ func handlePage(title string, filter func(list EventList) EventList) http.Handle
 			events = events.ByVenue(venueFilter)
 		}
 
-		type markerEvent struct {
-			Name       string `json:"name"`
-			Date       string `json:"date"`
-			Time       string `json:"time"`
-			IsToday    bool   `json:"is_today"`
-			IsThisWeek bool   `json:"is_this_week"`
-		}
-
-		type marker struct {
-			Name   string        `json:"name"`
-			Key    string        `json:"key"`
-			Lat    float64       `json:"lat"`
-			Lng    float64       `json:"lng"`
-			Events []markerEvent `json:"events"`
-		}
-
-		var markers []marker
-		for key, venue := range allVenues {
-			m := marker{Name: venue.Name, Key: key, Lat: venue.Latitude, Lng: venue.Longitude}
-			for _, e := range events.ByVenue(key) {
-				m.Events = append(m.Events, markerEvent{
-					Name:       e.Name,
-					Date:       e.Date,
-					Time:       e.Time,
-					IsToday:    e.IsToday,
-					IsThisWeek: e.IsThisWeek,
-				})
-			}
-			markers = append(markers, m)
-		}
-		jsonBytes, _ := json.Marshal(markers)
-
-		tmpl := template.Must(template.ParseFiles("templates/base.html"))
 		data := newPageData(title, events)
 		data.VenueFilter = venueFilter
-		data.VenuesJSON = template.JS(jsonBytes)
+		data.VenuesJSON = venuesJSON
+		if !scraped.IsZero() {
+			data.LastScrapedAt = scraped.Format("Monday, January 2 at 3:04 PM")
+		}
+
+		tmpl := template.Must(template.ParseFiles("frontend/base.html"))
 		tmpl.ExecuteTemplate(w, "base", data)
 	}
 }
