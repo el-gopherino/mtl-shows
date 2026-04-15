@@ -19,11 +19,14 @@ type Event struct {
 	EventImage string `json:"event_image,omitempty"`
 	DayOfWeek  string `json:"day_of_week"`
 
-	IsFree        bool `json:"is_free"`
-	IsToday       bool `json:"is_today"`
-	IsTomorrow    bool `json:"is_tomorrow"`
-	IsThisWeekend bool `json:"is_this_weekend"`
-	IsThisWeek    bool `json:"is_this_week"`
+	IsFree                bool `json:"is_free"`
+	IsToday               bool `json:"is_today"`
+	IsTomorrow            bool `json:"is_tomorrow"`
+	IsThisWeekend         bool `json:"is_this_weekend"`
+	IsThisWeekendFriday   bool `json:"is_this_weekend_friday"`
+	IsThisWeekendSaturday bool `json:"is_this_weekend_saturday"`
+	IsThisWeekendSunday   bool `json:"is_this_weekend_sunday"`
+	IsThisWeek            bool `json:"is_this_week"`
 
 	PriceValue      float64   `json:"-"`
 	ParsedDate      time.Time `json:"-"`
@@ -63,6 +66,9 @@ func (e *Event) enrichEvent() {
 	e.IsToday = isToday(e.ParsedDate)
 	e.IsTomorrow = daysUntil(e.ParsedDate) == 1
 	e.IsThisWeekend = isThisWeekend(e.ParsedDate)
+	e.IsThisWeekendFriday = isThisWeekendAndFriday(e.ParsedDate)
+	e.IsThisWeekendSaturday = isThisWeekendAndSaturday(e.ParsedDate)
+	e.IsThisWeekendSunday = isThisWeekendAndSunday(e.ParsedDate)
 	e.IsThisWeek = e.DaysUntil >= 0 && e.DaysUntil <= 7
 }
 
@@ -160,6 +166,33 @@ func (el EventList) ThisWeek() (result EventList) {
 func (el EventList) ThisWeekend() (result EventList) {
 	for _, e := range el {
 		if e.IsThisWeekend {
+			result = append(result, e)
+		}
+	}
+	return result
+}
+
+func (el EventList) ThisWeekendFriday() (result EventList) {
+	for _, e := range el {
+		if e.IsThisWeekend && e.IsThisWeekendFriday {
+			result = append(result, e)
+		}
+	}
+	return result
+}
+
+func (el EventList) ThisWeekendSaturday() (result EventList) {
+	for _, e := range el {
+		if e.IsThisWeekend && e.IsThisWeekendSaturday {
+			result = append(result, e)
+		}
+	}
+	return result
+}
+
+func (el EventList) ThisWeekendSunday() (result EventList) {
+	for _, e := range el {
+		if e.IsThisWeekend && e.IsThisWeekendSunday {
 			result = append(result, e)
 		}
 	}

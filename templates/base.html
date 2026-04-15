@@ -58,6 +58,14 @@
         .filter-group a:hover {
             text-decoration: underline;
         }
+        .filter-group select {
+            font-family: Verdana, Geneva, sans-serif;
+            font-size: 12px;
+            color: #0000EE;
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 1px 2px;
+        }
         /*.filter-group a:visited {*/
         /*    color: #551A8B;*/
         /*}*/
@@ -92,11 +100,19 @@
         <div class="filter-group">
             <span class="filter-group-title">When</span>
             <a href="/">All</a>
+            <a href="/right-now">Right Now</a>
             <a href="/tonight">Tonight</a>
             <a href="/tomorrow">Tomorrow</a>
             <a href="/this-week">This Week</a>
-            <a href="/this-weekend">This Weekend</a>
-            <a href="/right-now">Right Now</a>
+        </div>
+        <div class="filter-group">
+            <span class="filter-group-title">This Weekend</span>
+            <select class="weekend-select" onchange="if (this.value) window.location.href = this.value;">
+                <option value="/this-weekend">All weekend</option>
+                <option value="/this-weekend/friday">Friday</option>
+                <option value="/this-weekend/saturday">Saturday</option>
+                <option value="/this-weekend/sunday">Sunday</option>
+            </select>
         </div>
         <div class="filter-group">
             <span class="filter-group-title">Venue</span>
@@ -142,6 +158,18 @@
     <div id="map"></div>
 
     <script>
+        (function() {
+            var sel = document.querySelector('.weekend-select');
+            if (sel) {
+                for (var i = 0; i < sel.options.length; i++) {
+                    if (sel.options[i].value === window.location.pathname) {
+                        sel.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        })();
+
         var map = L.map('map').setView([45.5236, -73.5985], 13);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',

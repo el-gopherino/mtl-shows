@@ -41,11 +41,14 @@ func main() {
 		mux := http.NewServeMux()
 
 		mux.HandleFunc("/", handlePage("All Events", func(el EventList) EventList { return el }))
+		mux.HandleFunc("/right-now", handlePage("Right Now", EventList.RightNow))
 		mux.HandleFunc("/tonight", handlePage("Tonight", EventList.Tonight))
 		mux.HandleFunc("/tomorrow", handlePage("Tomorrow", EventList.Tomorrow))
 		mux.HandleFunc("/this-week", handlePage("This Week", EventList.ThisWeek))
 		mux.HandleFunc("/this-weekend", handlePage("This Weekend", EventList.ThisWeekend))
-		mux.HandleFunc("/right-now", handlePage("Right Now", EventList.RightNow))
+		mux.HandleFunc("/this-weekend/friday", handlePage("This Weekend — Friday", EventList.ThisWeekendFriday))
+		mux.HandleFunc("/this-weekend/saturday", handlePage("This Weekend — Saturday", EventList.ThisWeekendSaturday))
+		mux.HandleFunc("/this-weekend/sunday", handlePage("This Weekend — Sunday", EventList.ThisWeekendSunday))
 
 		//mux.HandleFunc("/events", handleAllEvents)
 		//mux.HandleFunc("/events/right-now", handleRightNow)
@@ -84,11 +87,12 @@ func runSequential() {
 		fmt.Printf("Scraping %s...\n", venue.Name)
 
 		var events EventList
-		if key == "turbo-haus" {
+		switch key {
+		case "turbo-haus":
 			events = scrapeTurboHausJSON()
-		} else if key == "mtelus" {
+		case "mtelus":
 			events = scrapeMTelusJSON()
-		} else {
+		default:
 			events = scrapeVenue(key, venue)
 		}
 		allEvents[key] = events

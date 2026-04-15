@@ -241,6 +241,24 @@ func isThisWeekend(t time.Time) bool {
 	return isWeekendDay && isThisWeek(t)
 }
 
+func isThisWeekendAndFriday(t time.Time) bool {
+	day := t.Weekday()
+	isFriday := day == time.Friday
+	return isFriday && isThisWeek(t)
+}
+
+func isThisWeekendAndSaturday(t time.Time) bool {
+	day := t.Weekday()
+	isSaturday := day == time.Saturday
+	return isSaturday && isThisWeek(t)
+}
+
+func isThisWeekendAndSunday(t time.Time) bool {
+	day := t.Weekday()
+	isSunday := day == time.Sunday
+	return isSunday && isThisWeek(t)
+}
+
 // parsePrice parses a price string to a float64 value
 func parsePrice(priceStr string) float64 {
 	priceStr = strings.ToLower(priceStr)
