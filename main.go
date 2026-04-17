@@ -101,6 +101,8 @@ func runSequential() {
 		switch key {
 		case "turbo-haus":
 			events = scrapeTurboHausJSON()
+		case "bar-le-ritz":
+			events = scrapeBarLeRitzJSON()
 		case "mtelus":
 			events = scrapeMTelusJSON()
 		default:
@@ -128,7 +130,9 @@ func runConcurrent() {
 			var events EventList
 			if k == "turbo-haus" {
 				events = scrapeTurboHausJSON()
-			} else if key == "mtelus" {
+			} else if k == "bar-le-ritz" {
+				events = scrapeBarLeRitzJSON()
+			} else if k == "mtelus" {
 				events = scrapeMTelusJSON()
 			} else {
 				events = scrapeVenue(k, v)

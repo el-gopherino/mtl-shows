@@ -22,6 +22,7 @@ type squarespaceItem struct {
 	EndDate   int64                `json:"endDate"`   // Unix ms
 	AssetURL  string               `json:"assetUrl"`  // poster image
 	Location  *squarespaceLocation `json:"location"`
+	Body      string               `json:"body"`
 	Excerpt   string               `json:"excerpt"`
 	Tags      []string             `json:"tags"`
 }

@@ -31,6 +31,7 @@ const (
 // API endpoints for JS-rendered venue websites
 const (
 	TurboHausURL  = "https://www.turbohaus.ca/calendrier?format=json"
+	BarLeRitzURL  = "https://www.barleritzpdb.com/vnements?format=json"
 	mtelusAPIBase = "https://mtelus.com/api/algolia/search?query="
 )
 
@@ -274,6 +275,23 @@ var allVenues = map[string]Venue{
 
 		Latitude:  45.510586,
 		Longitude: -73.56321,
+	},
+
+	"bar-le-ritz": {
+		Name:    "Bar Le Ritz PDB",
+		Address: "179 Rue Jean-Talon Ouest",
+
+		Link: "https://www.barleritzpdb.com/vnements",
+		AllowedDomains: []string{
+			"barleritzpdb.com",
+			"www.barleritzpdb.com",
+		},
+
+		// no Selector - parse JSON (Squarespace)
+		Website: "https://www.barleritzpdb.com",
+
+		Latitude:  45.530927,
+		Longitude: -73.614784,
 	},
 
 	"turbo-haus": {
