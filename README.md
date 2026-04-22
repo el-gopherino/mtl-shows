@@ -25,6 +25,7 @@ go build -o mtl-shows .
 
 ## Venues
 
+- Bar Le Ritz
 - Cafe Campus
 - Casa del Popolo
 - Club Soda

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 )
@@ -17,7 +18,7 @@ func scrapeVenue(venueKey string, venue Venue) (events EventList) {
 	c.OnHTML(venue.Selector, func(h *colly.HTMLElement) {
 		event, missing := parseEvent(h, venueKey)
 
-		// skip if event is in the past
+		// skip if event already happened
 		if event.AlreadyHappened {
 			return
 		}
@@ -33,6 +34,7 @@ func scrapeVenue(venueKey string, venue Venue) (events EventList) {
 	c.OnScraped(func(r *colly.Response) {
 		fmt.Printf("Scraping for %s finished.\n", venue.Name)
 	})
+	c.SetRequestTimeout(30 * time.Second)
 
 	c.Visit(venue.Link)
 

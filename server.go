@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"html/template"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -29,6 +30,8 @@ var (
 	cachedMarkers template.JS
 	lastScrapedAt time.Time
 	mu            sync.RWMutex
+
+	baseTmpl = template.Must(template.ParseFiles("frontend/base.html"))
 )
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -82,8 +85,9 @@ func handlePage(title string, filter func(list EventList) EventList) http.Handle
 			data.LastScrapedAt = scraped.Format("Monday, January 2 at 3:04 PM")
 		}
 
-		tmpl := template.Must(template.ParseFiles("frontend/base.html"))
-		tmpl.ExecuteTemplate(w, "base", data)
+		if err := baseTmpl.ExecuteTemplate(w, "base", data); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 

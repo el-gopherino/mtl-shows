@@ -9,24 +9,19 @@ import (
 	"sync"
 	"syscall"
 	"time"
-	"unsafe"
 )
 
-var scrapeSchedule = 1 * time.Hour // scrape à chaque heure
+var (
+	scrapeSchedule = 1 * time.Hour // scrape every hour
 
-func printSizes() {
-	fmt.Println("Event size: ", unsafe.Sizeof(Event{}))
-	fmt.Println("Venue size: ", unsafe.Sizeof(Venue{}))
-	fmt.Println(unsafe.Sizeof(frenchDayReplacer))
-	fmt.Println(unsafe.Sizeof(frenchMonthReplacer))
-}
+	// command-line flags
+	sequential = flag.Bool("seq", false, "sequential scraping")
+	concurrent = flag.Bool("conc", false, "concurrent scraping")
+	serve      = flag.Bool("serve", false, "scrapes concurrently first, then runs API server with 1 hour scheduler")
+)
 
 func main() {
 	now := time.Now()
-
-	sequential := flag.Bool("seq", false, "sequential scraping")
-	concurrent := flag.Bool("conc", false, "concurrent scraping")
-	serve := flag.Bool("serve", false, "scrapes concurrently first, then runs API server with 1 hour scheduler")
 	flag.Parse()
 
 	if *sequential {
@@ -56,17 +51,11 @@ func main() {
 		mux.HandleFunc("/this-weekend", handlePage("This Weekend", EventList.ThisWeekend))
 
 		mux.HandleFunc("/this-weekend/friday", handlePage("This Weekend — Friday",
-			func(el EventList) EventList {
-				return el.ThisWeekend().ByWeekday(time.Friday)
-			}))
+			func(el EventList) EventList { return el.ThisWeekend().ByWeekday(time.Friday) }))
 		mux.HandleFunc("/this-weekend/saturday", handlePage("This Weekend — Saturday",
-			func(el EventList) EventList {
-				return el.ThisWeekend().ByWeekday(time.Saturday)
-			}))
+			func(el EventList) EventList { return el.ThisWeekend().ByWeekday(time.Saturday) }))
 		mux.HandleFunc("/this-weekend/sunday", handlePage("This Weekend — Sunday",
-			func(el EventList) EventList {
-				return el.ThisWeekend().ByWeekday(time.Sunday)
-			}))
+			func(el EventList) EventList { return el.ThisWeekend().ByWeekday(time.Sunday) }))
 
 		srv := &http.Server{
 			Addr:    ":8080",
@@ -90,6 +79,65 @@ func main() {
 	}
 }
 
+func runOnSchedule(ctx context.Context, interval time.Duration) {
+	fmt.Println("running scraper on schedule...")
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	// scrape immediately
+	runConcurrent()
+
+	for {
+		select {
+		case <-ticker.C:
+			fmt.Println("Scheduled scrape starting...")
+			runConcurrent()
+		case <-ctx.Done():
+			fmt.Println("Scheduler stopped.")
+			return
+		}
+	}
+}
+
+func runConcurrent() {
+	now := time.Now()
+	fmt.Println("running scraper in concurrent mode...")
+	allEvents := make(map[string]EventList)
+
+	var scrapeMu sync.Mutex
+	var wg sync.WaitGroup
+
+	for key, venue := range allVenues {
+		wg.Add(1)
+
+		go func(k string, v Venue) {
+			defer wg.Done()
+			fmt.Printf("Scraping %s...\n", v.Name)
+			var events EventList
+
+			switch k {
+			case "turbo-haus":
+				events = scrapeTurboHausJSON()
+			case "bar-le-ritz":
+				events = scrapeBarLeRitzJSON()
+			case "mtelus":
+				events = scrapeMTelusJSON()
+			default:
+				events = scrapeVenue(k, v)
+			}
+			scrapeMu.Lock()
+			allEvents[k] = events
+			scrapeMu.Unlock()
+		}(key, venue)
+	}
+
+	wg.Wait()
+	saveAllEvents(allEvents)
+
+	fmt.Println("\nScraping of all venues complete.")
+	fmt.Printf("Scraping took %v\n", time.Since(now))
+}
+
 func runSequential() {
 	fmt.Println("running scraper in sequential mode...")
 	allEvents := make(map[string]EventList)
@@ -111,61 +159,4 @@ func runSequential() {
 		allEvents[key] = events
 	}
 	saveAllEvents(allEvents)
-}
-
-func runConcurrent() {
-	now := time.Now()
-	fmt.Println("running scraper in concurrent mode...")
-	allEvents := make(map[string]EventList)
-
-	var scrapeMu sync.Mutex
-	var wg sync.WaitGroup
-
-	for key, venue := range allVenues {
-		wg.Add(1)
-
-		go func(k string, v Venue) {
-			defer wg.Done()
-			fmt.Printf("Scraping %s...\n", v.Name)
-			var events EventList
-			if k == "turbo-haus" {
-				events = scrapeTurboHausJSON()
-			} else if k == "bar-le-ritz" {
-				events = scrapeBarLeRitzJSON()
-			} else if k == "mtelus" {
-				events = scrapeMTelusJSON()
-			} else {
-				events = scrapeVenue(k, v)
-			}
-			scrapeMu.Lock()
-			allEvents[k] = events
-			scrapeMu.Unlock()
-		}(key, venue)
-	}
-
-	wg.Wait()
-	saveAllEvents(allEvents)
-
-	fmt.Println("\nScraping of all venues complete.")
-	fmt.Printf("Scraping took %v\n", time.Since(now))
-}
-
-func runOnSchedule(ctx context.Context, interval time.Duration) {
-	fmt.Println("running scraper on schedule...")
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	// scrape immediately
-	runConcurrent()
-
-	for {
-		select {
-		case <-ticker.C:
-			fmt.Println("Scheduled scrape starting...")
-			runConcurrent()
-		case <-ctx.Done():
-			fmt.Println("Scheduler stopped.")
-			return
-		}
-	}
 }
