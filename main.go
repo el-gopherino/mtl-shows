@@ -13,25 +13,24 @@ import (
 
 var (
 	scrapeSchedule = 1 * time.Hour // scrape every hour
-
-	// command-line flags
-	sequential = flag.Bool("seq", false, "sequential scraping")
-	concurrent = flag.Bool("conc", false, "concurrent scraping")
-	serve      = flag.Bool("serve", false, "scrapes concurrently first, then runs API server with 1 hour scheduler")
+	sequential     = flag.Bool("seq", false, "sequential scraping")
+	concurrent     = flag.Bool("conc", false, "concurrent scraping")
+	serve          = flag.Bool("serve", false, "scrapes concurrently first, then runs API server with 1 hour scheduler")
 )
 
 func main() {
-	now := time.Now()
+
+	start := time.Now()
 	flag.Parse()
 
 	if *sequential {
 		runSequential()
-		fmt.Println("\nruntime duration: ", time.Since(now))
+		fmt.Println("\nruntime duration: ", time.Since(start))
 		return
 	}
 	if *concurrent {
 		runConcurrent()
-		fmt.Println("\nruntime duration: ", time.Since(now))
+		fmt.Println("\nruntime duration: ", time.Since(start))
 		return
 	}
 
