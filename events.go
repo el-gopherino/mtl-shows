@@ -51,7 +51,7 @@ func (e *Event) enrichEvent() {
 		e.IsThisWeekend = false
 		e.IsThisWeek = false
 
-		log.Printf("warning: could not parse date %q for event: %v", e.Date, err)
+		log.Printf("WARNING: could not parse date %q for event: %v", e.Date, err)
 		return
 	}
 
@@ -84,15 +84,13 @@ func (e *Event) validateEvent() (missing []string) {
 	return missing
 }
 
-// EventList implements sort.Interface
+// EventList implements sort.Interface to sort events by specified parameter
 type EventList []Event
 
 func (el EventList) Len() int      { return len(el) }
 func (el EventList) Swap(i, j int) { el[i], el[j] = el[j], el[i] }
-
-// Less defaults to sort by date (soonest first)
 func (el EventList) Less(i, j int) bool {
-	return el[i].ParsedDate.Before(el[j].ParsedDate)
+	return el[i].ParsedDate.Before(el[j].ParsedDate) // defaults to sort by date (soonest first)
 }
 
 func (el EventList) SortByDate() {
@@ -165,16 +163,14 @@ func (el EventList) ThisWeekend() (result EventList) {
 	return result
 }
 
-// Free returns events that are free (no money)
-// not used
-func (el EventList) Free() (result EventList) {
-	for _, e := range el {
-		if e.IsFree {
-			result = append(result, e)
-		}
-	}
-	return result
-}
+//func (el EventList) Free() (result EventList) {
+//	for _, e := range el {
+//		if e.IsFree {
+//			result = append(result, e)
+//		}
+//	}
+//	return result
+//}
 
 // ByWeekday return events by the specified day in the day argument
 func (el EventList) ByWeekday(day time.Weekday) (result EventList) {
