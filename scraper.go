@@ -35,7 +35,6 @@ func scrapeVenue(venueKey string, venue Venue) (events EventList) {
 		fmt.Printf("Scraping for %s finished.\n", venue.Name)
 	})
 	c.SetRequestTimeout(30 * time.Second)
-
 	c.Visit(venue.Link)
 
 	return events

@@ -15,11 +15,11 @@ var (
 	scrapeSchedule = 1 * time.Hour // scrape every hour
 	sequential     = flag.Bool("seq", false, "sequential scraping")
 	concurrent     = flag.Bool("conc", false, "concurrent scraping")
-	serve          = flag.Bool("serve", false, "scrapes concurrently first, then runs API server with 1 hour scheduler")
+	serve          = flag.Bool("serve", false,
+		"scrape concurrently at startup, then runs API server with 1 hour scrape scheduler")
 )
 
 func main() {
-
 	start := time.Now()
 	flag.Parse()
 
@@ -61,7 +61,6 @@ func main() {
 			Handler: corsMiddleware(mux),
 		}
 
-		// allows to kill scheduler and port with ctrl+C
 		go func() {
 			<-ctx.Done()
 			if err := srv.Shutdown(context.Background()); err != nil {
