@@ -10,12 +10,12 @@ type Venue struct {
 	Selector       string // CSS selector for events on page -- Colly
 	Website        string
 
-	// for interactive map
+	// interactive map values
 	Latitude  float64
 	Longitude float64
 }
 
-// CSS selectors for colly
+// colly CSS selectors
 const (
 	CasaDelPopoloSelector    = "div.md\\:w-5\\/12.p-6"
 	QuaiDesBrumesSelector    = "article.mec-event-article"
@@ -28,7 +28,7 @@ const (
 	FairmountTheatreSelector = "article.eventlist-event--upcoming"
 )
 
-// API endpoints for JS-rendered venue websites
+// endpoints for JS-rendered venue websites
 const (
 	TurboHausURL  = "https://www.turbohaus.ca/calendrier?format=json"
 	BarLeRitzURL  = "https://www.barleritzpdb.com/vnements?format=json"

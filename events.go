@@ -22,7 +22,6 @@ type Event struct {
 	EventImage string `json:"event_image,omitempty"`
 	DayOfWeek  string `json:"day_of_week"`
 
-	IsRightNow    bool `json:"is_right_now"`
 	IsFree        bool `json:"is_free"`
 	IsToday       bool `json:"is_today"`
 	IsTomorrow    bool `json:"is_tomorrow"`

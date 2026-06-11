@@ -1,8 +1,14 @@
 package main
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 )
@@ -149,7 +155,7 @@ func parseVerreBouteille(h *colly.HTMLElement) Event {
 	// The date h3 is inside card-content but has no class — it's the second h3
 	rawDateTime := strings.TrimSpace(h.ChildText("div.card-content h3"))
 
-	date, eventTime := "", ""
+	var date, eventTime string
 	if strings.Contains(rawDateTime, " à ") {
 		parts := strings.SplitN(rawDateTime, " à ", 2)
 		date = strings.TrimSpace(parts[0])
@@ -241,6 +247,309 @@ func parseFairmountTheatre(h *colly.HTMLElement) Event {
 		Time:       showTime,
 		TicketURL:  ticketURL,
 		EventImage: h.DOM.Find("a.eventlist-column-thumbnail img").First().AttrOr("src", ""),
+	}
+
+	e.enrichEvent()
+	return e
+}
+
+func scrapeTurboHausJSON() (events EventList) {
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Get(TurboHausURL)
+	if err != nil {
+		log.Printf("[turbo-haus] HTTP request failed: %v", err)
+		return nil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("[turbo-haus] unexpected status: %d", resp.StatusCode)
+		return nil
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("[turbo-haus] failed to read body: %v", err)
+		return nil
+	}
+
+	var sqResp squarespaceResponse
+	if err = json.Unmarshal(body, &sqResp); err != nil {
+		log.Printf("[turbo-haus] JSON parse failed: %v", err)
+		return nil
+	}
+
+	// Squarespace may return events in "upcoming", "items", or both.
+	// Merge them and deduplicate by URL.
+	allItems := mergeSquarespaceItems(sqResp)
+
+	events = make(EventList, 0, len(allItems))
+	for _, item := range allItems {
+		e := convertSquarespaceItem(item)
+		if e.AlreadyHappened {
+			continue
+		}
+		events = append(events, e)
+	}
+
+	fmt.Printf("Scraping for Turbo Haus finished.\n")
+	return events
+}
+
+func convertSquarespaceItem(item squarespaceItem) Event {
+	// Squarespace timestamps are Unix milliseconds
+	startTime := time.UnixMilli(item.StartDate).In(loc)
+	endTime := time.UnixMilli(item.EndDate).In(loc)
+
+	dateStr := fmt.Sprintf("%s %d, %d",
+		startTime.Month().String(),
+		startTime.Day(),
+		startTime.Year(),
+	)
+	timeStr := startTime.Format("15:04")
+	endTimeStr := endTime.Format("15:04")
+	_ = endTimeStr // for end time
+
+	venue := "Turbo Haüs"
+	address := "2040 Rue Saint-Denis"
+	if item.Location != nil {
+		if item.Location.AddressTitle != "" {
+			venue = item.Location.AddressTitle
+		}
+		if item.Location.AddressLine1 != "" {
+			address = item.Location.AddressLine1
+		}
+	}
+
+	e := Event{
+		VenueKey:   "turbo-haus",
+		Name:       item.Title,
+		Venue:      venue,
+		Address:    address,
+		Date:       dateStr,
+		Time:       timeStr,
+		TicketURL:  "https://www.turbohaus.ca" + item.FullURL,
+		EventImage: item.AssetURL,
+	}
+
+	e.enrichEvent()
+	return e
+}
+
+func scrapeBarLeRitzJSON() EventList {
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Get(BarLeRitzURL)
+	if err != nil {
+		log.Printf("[bar-le-ritz] HTTP request failed: %v", err)
+		return nil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("[bar-le-ritz] unexpected status: %d", resp.StatusCode)
+		return nil
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("[bar-le-ritz] failed to read body: %v", err)
+		return nil
+	}
+
+	var sqResp squarespaceResponse
+	if err = json.Unmarshal(body, &sqResp); err != nil {
+		log.Printf("[bar-le-ritz] JSON parse failed: %v", err)
+		return nil
+	}
+
+	allItems := mergeSquarespaceItems(sqResp)
+
+	events := make(EventList, 0, len(allItems))
+	for _, item := range allItems {
+		e := convertBarLeRitzItem(item)
+		if e.AlreadyHappened {
+			continue
+		}
+		events = append(events, e)
+	}
+
+	fmt.Printf("Scraping for Bar Le Ritz PDB finished.\n")
+	return events
+}
+
+func convertBarLeRitzItem(item squarespaceItem) Event {
+	startTime := time.UnixMilli(item.StartDate).In(loc)
+
+	dateStr := fmt.Sprintf("%s %d, %d",
+		startTime.Month().String(),
+		startTime.Day(),
+		startTime.Year(),
+	)
+	timeStr := startTime.Format("15:04")
+
+	name := extractEventName(item.Body)
+
+	e := Event{
+		VenueKey:   "bar-le-ritz",
+		Name:       name,
+		Venue:      "Bar Le Ritz PDB",
+		Address:    "179 Rue Jean-Talon Ouest",
+		Date:       dateStr,
+		Time:       timeStr,
+		TicketURL:  "https://www.barleritzpdb.com" + item.FullURL,
+		EventImage: item.AssetURL,
+	}
+
+	e.enrichEvent()
+	return e
+}
+
+type mtelusResponse struct {
+	Hits    []mtelusHit `json:"hits"`
+	NbHits  int         `json:"nbHits"`
+	NbPages int         `json:"nbPages"`
+	Page    int         `json:"page"`
+}
+
+type mtelusHit struct {
+	Title     string        `json:"title"`
+	Slug      string        `json:"slug"`
+	ShowTime  int64         `json:"show_time"`
+	ShowDate  int64         `json:"show_date"`
+	DoorTime  int64         `json:"door_time"`
+	Venue     mtelusVenue   `json:"venue"`
+	Thumbnail string        `json:"thumbnail"`
+	EventTag  string        `json:"event_tag"`
+	Genre     []mtelusGenre `json:"genre"`
+}
+
+type mtelusVenue struct {
+	Code string `json:"code"`
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+}
+
+type mtelusGenre struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+}
+
+type mtelusQuery struct {
+	Filters   mtelusFilters `json:"filters"`
+	Options   mtelusOpts    `json:"options"`
+	IndexName string        `json:"indexName"`
+	VenueSlug string        `json:"venueSlug"`
+}
+
+type mtelusFilters struct {
+	DisplayMode string   `json:"displayMode"`
+	Type        []string `json:"type"`
+	Search      string   `json:"search"`
+}
+
+type mtelusOpts struct {
+	HitsPerPage int `json:"hitsPerPage"`
+	Page        int `json:"page"`
+}
+
+func buildMTelusURL(page int) string {
+	q := mtelusQuery{
+		Filters: mtelusFilters{
+			DisplayMode: "list",
+			Type:        []string{"evenko_show", "show"},
+			Search:      "",
+		},
+		Options: mtelusOpts{
+			HitsPerPage: 20,
+			Page:        page,
+		},
+		IndexName: "master_evenko_en-CA",
+		VenueSlug: "mtelus",
+	}
+
+	jsonBytes, _ := json.Marshal(q)
+	encoded := base64.StdEncoding.EncodeToString(jsonBytes)
+	return mtelusAPIBase + encoded
+}
+
+func scrapeMTelusJSON() EventList {
+	client := &http.Client{Timeout: 15 * time.Second}
+	var allHits []mtelusHit
+
+	// fetch first page to get total pages
+	for page := 0; ; page++ {
+		url := buildMTelusURL(page)
+
+		resp, err := client.Get(url)
+		if err != nil {
+			log.Printf("[mtelus] HTTP request failed (page %d): %v", page, err)
+			break
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			log.Printf("[mtelus] failed to read body (page %d): %v", page, err)
+			break
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			log.Printf("[mtelus] unexpected status (page %d): %d", page, resp.StatusCode)
+			break
+		}
+
+		var mResp mtelusResponse
+		if err = json.Unmarshal(body, &mResp); err != nil {
+			log.Printf("[mtelus] JSON parse failed (page %d): %v", page, err)
+			break
+		}
+
+		allHits = append(allHits, mResp.Hits...)
+
+		if page+1 >= mResp.NbPages {
+			break
+		}
+	}
+
+	events := make(EventList, 0, len(allHits))
+	for _, hit := range allHits {
+		e := convertMTelusHit(hit)
+		if e.AlreadyHappened {
+			continue
+		}
+		events = append(events, e)
+	}
+
+	fmt.Printf("Scraping for MTelus finished.\n")
+	return events
+}
+
+func convertMTelusHit(hit mtelusHit) Event {
+	showTime := time.Unix(hit.ShowTime, 0).In(loc)
+
+	dateStr := fmt.Sprintf("%s %d, %d",
+		showTime.Month().String(),
+		showTime.Day(),
+		showTime.Year(),
+	)
+	timeStr := showTime.Format("3:04 PM")
+
+	thumbnail := hit.Thumbnail
+	if thumbnail != "" && thumbnail[:2] == "//" {
+		thumbnail = "https:" + thumbnail
+	}
+
+	ticketURL := fmt.Sprintf("https://mtelus.com/en/events/mtelus/%s", hit.Slug)
+
+	e := Event{
+		VenueKey:   "mtelus",
+		Name:       hit.Title,
+		Venue:      "MTelus",
+		Address:    "59 Rue Sainte-Catherine Est",
+		Date:       dateStr,
+		Time:       timeStr,
+		TicketURL:  ticketURL,
+		EventImage: thumbnail,
 	}
 
 	e.enrichEvent()
