@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const addr = ":8080"
+
 var (
 	scrapeSchedule = 1 * time.Hour // scrape every hour
 	sequential     = flag.Bool("seq", false, "sequential scraping")
@@ -57,7 +59,7 @@ func main() {
 			func(el EventList) EventList { return el.ThisWeekend().ByWeekday(time.Sunday) }))
 
 		srv := &http.Server{
-			Addr:    ":8080",
+			Addr:    addr,
 			Handler: corsMiddleware(mux),
 		}
 
@@ -106,14 +108,11 @@ func runConcurrent() {
 	var wg sync.WaitGroup
 
 	for key, venue := range allVenues {
-		wg.Add(1)
-
-		go func(k string, v Venue) {
-			defer wg.Done()
-			fmt.Printf("Scraping %s...\n", v.Name)
+		wg.Go(func() {
+			fmt.Printf("Scraping %s...\n", venue.Name)
 			var events EventList
 
-			switch k {
+			switch key {
 			case "turbo-haus":
 				events = scrapeTurboHausJSON()
 			case "bar-le-ritz":
@@ -121,12 +120,12 @@ func runConcurrent() {
 			case "mtelus":
 				events = scrapeMTelusJSON()
 			default:
-				events = scrapeVenue(k, v)
+				events = scrapeVenue(key, venue)
 			}
 			scrapeMu.Lock()
-			allEvents[k] = events
+			allEvents[key] = events
 			scrapeMu.Unlock()
-		}(key, venue)
+		})
 	}
 
 	wg.Wait()

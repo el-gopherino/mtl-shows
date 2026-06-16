@@ -8,7 +8,7 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
-// scrapeVenue scrapes the HTML content of a Venue, in order to parse it in parsers.go
+// scrapeVenue scrapes the HTML content of a Venue, then parses it in parsers.go
 func scrapeVenue(venueKey string, venue Venue) (events EventList) {
 	events = make(EventList, 0, 20)
 
@@ -35,7 +35,10 @@ func scrapeVenue(venueKey string, venue Venue) (events EventList) {
 		fmt.Printf("Scraping for %s finished.\n", venue.Name)
 	})
 	c.SetRequestTimeout(30 * time.Second)
-	c.Visit(venue.Link)
+	err := c.Visit(venue.Link)
+	if err != nil {
+		return nil
+	}
 
 	return events
 }

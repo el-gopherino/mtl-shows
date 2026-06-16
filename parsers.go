@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -90,7 +91,6 @@ func parseCafeCampus(h *colly.HTMLElement) Event {
 }
 
 func parseQuaiDesBrumes(h *colly.HTMLElement) Event {
-	// prices not shown on page
 	e := Event{
 		VenueKey:   "quai-des-brumes",
 		Name:       h.ChildText("h3.mec-event-title a"),
@@ -228,7 +228,7 @@ func parseLeMinistere(h *colly.HTMLElement) Event {
 
 func parseFairmountTheatre(h *colly.HTMLElement) Event {
 
-	// artist name is in the description h2, not in h1.eventlist-title (which is just the French date)
+	// artist name is in h2 description
 	name := strings.TrimSpace(h.DOM.Find("div.eventlist-description h2").First().Text())
 
 	// "8:00 p.m." -> "8:00 PM"
@@ -253,9 +253,29 @@ func parseFairmountTheatre(h *colly.HTMLElement) Event {
 	return e
 }
 
+type turboHausResponse struct {
+	Docs []turboHausEvent `json:"docs"`
+}
+
+type turboHausEvent struct {
+	Title     string `json:"title"`
+	StartsAt  string `json:"startsAt"`
+	TicketURL string `json:"ticketUrl"`
+	Slug      string `json:"slug"`
+	Poster    *struct {
+		URL string `json:"url"`
+	} `json:"poster"`
+}
+
 func scrapeTurboHausJSON() (events EventList) {
 	client := &http.Client{Timeout: 15 * time.Second}
-	resp, err := client.Get(TurboHausURL)
+
+	q := url.Values{}
+	q.Set("limit", "200")
+	q.Set("sort", "startsAt")
+	q.Set("where[startsAt][greater_than]", time.Now().UTC().Format(time.RFC3339))
+
+	resp, err := client.Get(TurboHausURL + "?" + q.Encode())
 	if err != nil {
 		log.Printf("[turbo-haus] HTTP request failed: %v", err)
 		return nil
@@ -273,20 +293,16 @@ func scrapeTurboHausJSON() (events EventList) {
 		return nil
 	}
 
-	var sqResp squarespaceResponse
-	if err = json.Unmarshal(body, &sqResp); err != nil {
+	var th turboHausResponse
+	if err = json.Unmarshal(body, &th); err != nil {
 		log.Printf("[turbo-haus] JSON parse failed: %v", err)
 		return nil
 	}
 
-	// Squarespace may return events in "upcoming", "items", or both.
-	// Merge them and deduplicate by URL.
-	allItems := mergeSquarespaceItems(sqResp)
-
-	events = make(EventList, 0, len(allItems))
-	for _, item := range allItems {
-		e := convertSquarespaceItem(item)
-		if e.AlreadyHappened {
+	events = make(EventList, 0, len(th.Docs))
+	for _, item := range th.Docs {
+		e, ok := convertTurboHausEvent(item)
+		if !ok || e.AlreadyHappened {
 			continue
 		}
 		events = append(events, e)
@@ -296,47 +312,52 @@ func scrapeTurboHausJSON() (events EventList) {
 	return events
 }
 
-func convertSquarespaceItem(item squarespaceItem) Event {
-	// Squarespace timestamps are Unix milliseconds
-	startTime := time.UnixMilli(item.StartDate).In(loc)
-	endTime := time.UnixMilli(item.EndDate).In(loc)
+func convertTurboHausEvent(item turboHausEvent) (Event, bool) {
+	startTime, err := time.Parse(time.RFC3339, item.StartsAt)
+	if err != nil {
+		log.Printf("[turbo-haus] failed to parse startsAt %q: %v", item.StartsAt, err)
+		return Event{}, false
+	}
+	localStart := startTime.In(loc)
 
 	dateStr := fmt.Sprintf("%s %d, %d",
-		startTime.Month().String(),
-		startTime.Day(),
-		startTime.Year(),
+		localStart.Month().String(),
+		localStart.Day(),
+		localStart.Year(),
 	)
-	timeStr := startTime.Format("15:04")
-	endTimeStr := endTime.Format("15:04")
-	_ = endTimeStr // for end time
+	timeStr := localStart.Format("15:04")
 
-	venue := "Turbo Haüs"
-	address := "2040 Rue Saint-Denis"
-	if item.Location != nil {
-		if item.Location.AddressTitle != "" {
-			venue = item.Location.AddressTitle
-		}
-		if item.Location.AddressLine1 != "" {
-			address = item.Location.AddressLine1
-		}
+	utcStart := startTime.UTC()
+	eventPageURL := fmt.Sprintf("https://www.turbohaus.ca/calendrier/%d/%d/%d/%s",
+		utcStart.Year(), int(utcStart.Month()), utcStart.Day(), item.Slug,
+	)
+
+	ticketURL := item.TicketURL
+	if ticketURL == "" {
+		ticketURL = eventPageURL
+	}
+
+	image := ""
+	if item.Poster != nil && item.Poster.URL != "" {
+		image = "https://www.turbohaus.ca" + item.Poster.URL
 	}
 
 	e := Event{
 		VenueKey:   "turbo-haus",
 		Name:       item.Title,
-		Venue:      venue,
-		Address:    address,
+		Venue:      "Turbo Haüs",
+		Address:    "2040 Rue Saint-Denis",
 		Date:       dateStr,
 		Time:       timeStr,
-		TicketURL:  "https://www.turbohaus.ca" + item.FullURL,
-		EventImage: item.AssetURL,
+		TicketURL:  ticketURL,
+		EventImage: image,
 	}
 
 	e.enrichEvent()
-	return e
+	return e, true
 }
 
-func scrapeBarLeRitzJSON() EventList {
+func scrapeBarLeRitzJSON() (events EventList) {
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Get(BarLeRitzURL)
 	if err != nil {
@@ -364,7 +385,7 @@ func scrapeBarLeRitzJSON() EventList {
 
 	allItems := mergeSquarespaceItems(sqResp)
 
-	events := make(EventList, 0, len(allItems))
+	events = make(EventList, 0, len(allItems))
 	for _, item := range allItems {
 		e := convertBarLeRitzItem(item)
 		if e.AlreadyHappened {
@@ -472,15 +493,15 @@ func buildMTelusURL(page int) string {
 	return mtelusAPIBase + encoded
 }
 
-func scrapeMTelusJSON() EventList {
+func scrapeMTelusJSON() (events EventList) {
 	client := &http.Client{Timeout: 15 * time.Second}
 	var allHits []mtelusHit
 
 	// fetch first page to get total pages
 	for page := 0; ; page++ {
-		url := buildMTelusURL(page)
+		mTelusURL := buildMTelusURL(page)
 
-		resp, err := client.Get(url)
+		resp, err := client.Get(mTelusURL)
 		if err != nil {
 			log.Printf("[mtelus] HTTP request failed (page %d): %v", page, err)
 			break
@@ -511,7 +532,7 @@ func scrapeMTelusJSON() EventList {
 		}
 	}
 
-	events := make(EventList, 0, len(allHits))
+	events = make(EventList, 0, len(allHits))
 	for _, hit := range allHits {
 		e := convertMTelusHit(hit)
 		if e.AlreadyHappened {

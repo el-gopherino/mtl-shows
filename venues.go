@@ -30,7 +30,7 @@ const (
 
 // endpoints for JS-rendered venue websites
 const (
-	TurboHausURL  = "https://www.turbohaus.ca/calendrier?format=json"
+	TurboHausURL  = "https://www.turbohaus.ca/api/events"
 	BarLeRitzURL  = "https://www.barleritzpdb.com/vnements?format=json"
 	mtelusAPIBase = "https://mtelus.com/api/algolia/search?query="
 )
