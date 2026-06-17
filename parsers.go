@@ -37,11 +37,12 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 		e = parseLeMinistere(h)
 	case "fairmount-theatre":
 		e = parseFairmountTheatre(h)
+	case "olympia":
+		e = parseOlympia(h)
 	default:
-		fmt.Printf("ERROR: no parser for [%q]. Returning empty event...\n", venueKey)
+		fmt.Printf("ERROR: no parser for [%q]. Returning empty event...\n", venueKey) // should never happen
 		return Event{}, nil
 	}
-
 	return e, e.validateEvent()
 }
 
@@ -65,7 +66,6 @@ func parseCasaGroup(h *colly.HTMLElement, venueKey string) Event {
 }
 
 func parseCafeCampus(h *colly.HTMLElement) Event {
-
 	rawDateTime := strings.TrimSpace(h.ChildText("span.sh-date"))
 	date, eventTime := splitDateTime(rawDateTime)
 	priceText := h.ChildText("div.sh-excerpt")
@@ -85,7 +85,6 @@ func parseCafeCampus(h *colly.HTMLElement) Event {
 		TicketURL:  h.ChildAttr("span.sh-address a", "href"),
 		EventImage: eventImage,
 	}
-
 	e.enrichEvent()
 	return e
 }
@@ -101,13 +100,11 @@ func parseQuaiDesBrumes(h *colly.HTMLElement) Event {
 		TicketURL:  h.ChildAttr("a.mec-color-hover", "href"),
 		EventImage: h.ChildAttr("div.mec-event-image img", "src"),
 	}
-
 	e.enrichEvent()
 	return e
 }
 
 func parsePiranhaBar(h *colly.HTMLElement) Event {
-
 	ticketPath := h.ChildAttr("a.eventlist-button", "href")
 	ticketURL := ""
 	if ticketPath != "" {
@@ -124,13 +121,11 @@ func parsePiranhaBar(h *colly.HTMLElement) Event {
 		TicketURL:  ticketURL,
 		EventImage: h.ChildAttr("a.eventlist-column-thumbnail img", "src"),
 	}
-
 	e.enrichEvent()
 	return e
 }
 
 func parseHemisphereGauche(h *colly.HTMLElement) Event {
-
 	eventImage, _ := h.DOM.Parent().Find("div[data-hook=ev-list-image] img").First().Attr("src")
 
 	e := Event{
@@ -143,7 +138,6 @@ func parseHemisphereGauche(h *colly.HTMLElement) Event {
 		TicketURL:  h.ChildAttr("a.DjQEyU m022zm aUkG34", "href"),
 		EventImage: eventImage,
 	}
-
 	e.enrichEvent()
 	return e
 }
@@ -164,8 +158,6 @@ func parseVerreBouteille(h *colly.HTMLElement) Event {
 		date = rawDateTime
 	}
 
-	ticketURL := h.ChildAttr("a[href*='showInfo']", "href")
-
 	imageStyle := h.ChildAttr("div.card", "style")
 	eventImage := extractBackgroundURL(imageStyle)
 
@@ -176,16 +168,14 @@ func parseVerreBouteille(h *colly.HTMLElement) Event {
 		Address:    "2112 Avenue du Mont-Royal Est",
 		Date:       date,
 		Time:       eventTime,
-		TicketURL:  ticketURL,
+		TicketURL:  h.ChildAttr("a[href*='showInfo']", "href"),
 		EventImage: eventImage,
 	}
-
 	e.enrichEvent()
 	return e
 }
 
 func parseClubSoda(h *colly.HTMLElement) Event {
-
 	ticketURL := h.ChildAttr("a.stretched-link", "href")
 	if ticketURL != "" && !strings.HasPrefix(ticketURL, "http") {
 		ticketURL = "https://clubsoda.ca" + ticketURL
@@ -200,13 +190,11 @@ func parseClubSoda(h *colly.HTMLElement) Event {
 		TicketURL:  ticketURL,
 		EventImage: h.ChildAttr("div.card-img-top img", "src"),
 	}
-
 	e.enrichEvent()
 	return e
 }
 
 func parseLeMinistere(h *colly.HTMLElement) Event {
-
 	ticketURL := h.ChildAttr("a.stretched-link", "href")
 	if ticketURL != "" && !strings.HasPrefix(ticketURL, "http") {
 		ticketURL = "https://leministere.ca" + ticketURL
@@ -221,34 +209,113 @@ func parseLeMinistere(h *colly.HTMLElement) Event {
 		TicketURL:  ticketURL,
 		EventImage: h.ChildAttr("div.card-img-top img", "src"),
 	}
-
 	e.enrichEvent()
 	return e
 }
 
+func parseOlympia(h *colly.HTMLElement) Event {
+	// Date: "20\n\nJune" + "2026" -> "20 June 2026"
+	dayMonth := strings.Join(strings.Fields(h.ChildText("li.wtb-olympia-heading-title")), " ")
+	year := strings.TrimSpace(h.ChildText("li.wtb-olympia-concert-year"))
+	date := strings.TrimSpace(dayMonth + " " + year)
+
+	// Time: AJAX returns FR "spectacle: 19:00 | portes: 18:00",
+	// static EN page returns "show: 7:00 pm | doors: 6:00 pm".
+	rawTime := h.ChildText("span.wtb-olympia-concert_time")
+	showTime := rawTime
+	if idx := strings.Index(rawTime, "|"); idx >= 0 {
+		showTime = rawTime[:idx]
+	}
+	showTime = strings.TrimSpace(showTime)
+	showTime = strings.TrimPrefix(showTime, "spectacle:")
+	showTime = strings.TrimPrefix(showTime, "show:")
+	showTime = strings.ReplaceAll(showTime, "p.m.", "PM")
+	showTime = strings.ReplaceAll(showTime, "a.m.", "AM")
+	showTime = strings.ReplaceAll(showTime, "pm", "PM")
+	showTime = strings.ReplaceAll(showTime, "am", "AM")
+
+	e := Event{
+		VenueKey:   "olympia",
+		Name:       strings.TrimSpace(h.ChildText("h2.wtb-olympia-concert_name")),
+		Venue:      "L'Olympia",
+		Address:    "1004 Rue Sainte-Catherine Est",
+		Date:       date,
+		Time:       strings.TrimSpace(showTime),
+		Price:      strings.TrimSpace(h.ChildText("div.wtb-olympia-concert_tickets p.wtb-olympia-price")),
+		TicketURL:  h.ChildAttr("div.wtb-olympia-concert_tickets div.wtb-olympia-btn-wrap a", "href"),
+		EventImage: h.ChildAttr("div.wtb-olympia-concert_image img", "src"),
+	}
+	e.enrichEvent()
+	return e
+}
+
+// scrapeOlympiaAJAX paginates L'Olympia's WP "programmation" AJAX endpoint.
+// The public /en/ page server-renders only the first batch; the rest are
+// fetched in chunks of 10 via admin-ajax.php as the user scrolls.
+// Pages are indexed from 0 and an empty response signals the end.
+func scrapeOlympiaAJAX() (events EventList) {
+	events = make(EventList, 0, 80)
+
+	c := colly.NewCollector(
+		colly.AllowedDomains("olympiamontreal.com", "www.olympiamontreal.com"),
+	)
+	c.SetRequestTimeout(30 * time.Second)
+
+	cardsThisPage := 0
+	c.OnHTML(OlympiaSelector, func(h *colly.HTMLElement) {
+		cardsThisPage++
+		event, missing := parseEvent(h, "olympia")
+		if event.AlreadyHappened {
+			return
+		}
+		if len(missing) > 0 {
+			fmt.Printf("\t[olympia]: missing: %v\n", strings.Join(missing, ", "))
+		}
+		events = append(events, event)
+	})
+	c.OnError(func(r *colly.Response, err error) {
+		log.Printf("[olympia] AJAX request failed: %v", err)
+	})
+
+	const maxPages = 50 // safety cap; site currently has ~8 pages
+	for page := 0; page < maxPages; page++ {
+		cardsThisPage = 0
+		err := c.Post(OlympiaAjaxURL, map[string]string{
+			"action":        "programmation",
+			"olym_page":     fmt.Sprintf("%d", page),
+			"olym_category": "",
+			"olym_date":     "",
+			"olym_search":   "",
+		})
+		if err != nil {
+			log.Printf("[olympia] page %d POST failed: %v", page, err)
+			break
+		}
+		if cardsThisPage == 0 {
+			break
+		}
+	}
+
+	fmt.Printf("Scraping for L'Olympia finished.\n")
+	return events
+}
+
 func parseFairmountTheatre(h *colly.HTMLElement) Event {
-
-	// artist name is in h2 description
-	name := strings.TrimSpace(h.DOM.Find("div.eventlist-description h2").First().Text())
-
 	// "8:00 p.m." -> "8:00 PM"
 	showTime := strings.TrimSpace(h.DOM.Find("time.event-time-localized-start").First().Text())
 	showTime = strings.ReplaceAll(showTime, "p.m.", "PM")
 	showTime = strings.ReplaceAll(showTime, "a.m.", "AM")
 
-	ticketURL := h.DOM.Find("div.sqs-block-button-container a.sqs-block-button-element").First().AttrOr("href", "")
-
 	e := Event{
 		VenueKey:   "fairmount-theatre",
-		Name:       name,
+		Name:       strings.TrimSpace(h.DOM.Find("div.eventlist-description h2").First().Text()),
 		Date:       strings.TrimSpace(h.DOM.Find("time.event-date").First().Text()),
 		Venue:      "Théâtre Fairmount",
 		Address:    "5240 Avenue du Parc",
 		Time:       showTime,
-		TicketURL:  ticketURL,
+		TicketURL:  h.DOM.Find("div.sqs-block-button-container a.sqs-block-button-element").First().AttrOr("href", ""),
 		EventImage: h.DOM.Find("a.eventlist-column-thumbnail img").First().AttrOr("src", ""),
 	}
-
 	e.enrichEvent()
 	return e
 }
@@ -352,7 +419,6 @@ func convertTurboHausEvent(item turboHausEvent) (Event, bool) {
 		TicketURL:  ticketURL,
 		EventImage: image,
 	}
-
 	e.enrichEvent()
 	return e, true
 }
@@ -401,26 +467,16 @@ func scrapeBarLeRitzJSON() (events EventList) {
 func convertBarLeRitzItem(item squarespaceItem) Event {
 	startTime := time.UnixMilli(item.StartDate).In(loc)
 
-	dateStr := fmt.Sprintf("%s %d, %d",
-		startTime.Month().String(),
-		startTime.Day(),
-		startTime.Year(),
-	)
-	timeStr := startTime.Format("15:04")
-
-	name := extractEventName(item.Body)
-
 	e := Event{
 		VenueKey:   "bar-le-ritz",
-		Name:       name,
+		Name:       extractEventName(item.Body),
 		Venue:      "Bar Le Ritz PDB",
 		Address:    "179 Rue Jean-Talon Ouest",
-		Date:       dateStr,
-		Time:       timeStr,
+		Date:       fmt.Sprintf("%s %d, %d", startTime.Month().String(), startTime.Day(), startTime.Year()),
+		Time:       startTime.Format("15:04"),
 		TicketURL:  "https://www.barleritzpdb.com" + item.FullURL,
 		EventImage: item.AssetURL,
 	}
-
 	e.enrichEvent()
 	return e
 }
@@ -572,7 +628,6 @@ func convertMTelusHit(hit mtelusHit) Event {
 		TicketURL:  ticketURL,
 		EventImage: thumbnail,
 	}
-
 	e.enrichEvent()
 	return e
 }

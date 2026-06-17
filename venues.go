@@ -26,13 +26,15 @@ const (
 	ClubSodaSelector         = "div.card.h-100"
 	LeMinistereSelector      = "div.col-sm-6.col-lg-4.mb-4"
 	FairmountTheatreSelector = "article.eventlist-event--upcoming"
+	OlympiaSelector          = "div.wtb-olympia-concert_wrap"
 )
 
 // endpoints for JS-rendered venue websites
 const (
-	TurboHausURL  = "https://www.turbohaus.ca/api/events"
-	BarLeRitzURL  = "https://www.barleritzpdb.com/vnements?format=json"
-	mtelusAPIBase = "https://mtelus.com/api/algolia/search?query="
+	TurboHausURL   = "https://www.turbohaus.ca/api/events"
+	BarLeRitzURL   = "https://www.barleritzpdb.com/vnements?format=json"
+	mtelusAPIBase  = "https://mtelus.com/api/algolia/search?query="
+	OlympiaAjaxURL = "https://www.olympiamontreal.com/wp-admin/admin-ajax.php"
 )
 
 var allVenues = map[string]Venue{
@@ -258,6 +260,23 @@ var allVenues = map[string]Venue{
 
 		Latitude:  45.520477,
 		Longitude: -73.598509,
+	},
+
+	"olympia": {
+		Name:    "L'Olympia",
+		Address: "1004 Rue Sainte-Catherine Est",
+
+		Link: "https://www.olympiamontreal.com/en/programmation/",
+		AllowedDomains: []string{
+			"olympiamontreal.com",
+			"www.olympiamontreal.com",
+		},
+
+		// no Selector - paginated via admin-ajax.php
+		Website: "https://www.olympiamontreal.com/",
+
+		Latitude:  45.517137,
+		Longitude: -73.557311,
 	},
 
 	"mtelus": {

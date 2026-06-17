@@ -60,6 +60,7 @@ Scraped event data is written to JSON files in the project directory (`output/`,
 - L'Hemisphere Gauche
 - Le Ministère
 - MTelus
+- L'Olympia
 - Piranha Bar
 - P'tit Ours
 - Quai des Brumes

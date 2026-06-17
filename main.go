@@ -119,6 +119,8 @@ func runConcurrent() {
 				events = scrapeBarLeRitzJSON()
 			case "mtelus":
 				events = scrapeMTelusJSON()
+			case "olympia":
+				events = scrapeOlympiaAJAX()
 			default:
 				events = scrapeVenue(key, venue)
 			}
@@ -150,6 +152,8 @@ func runSequential() {
 			events = scrapeBarLeRitzJSON()
 		case "mtelus":
 			events = scrapeMTelusJSON()
+		case "olympia":
+			events = scrapeOlympiaAJAX()
 		default:
 			events = scrapeVenue(key, venue)
 		}
