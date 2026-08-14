@@ -2,209 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
 )
-
-type Event struct {
-	VenueKey   string `json:"venue_key"` // key for venue map
-	Name       string `json:"name"`
-	Venue      string `json:"venue"`
-	Date       string `json:"date"`
-	Address    string `json:"address"`
-	Time       string `json:"time,omitempty"`
-	Price      string `json:"price,omitempty"`
-	TicketURL  string `json:"ticket_url,omitempty"`
-	EventImage string `json:"event_image,omitempty"`
-	DayOfWeek  string `json:"day_of_week"`
-
-	IsFree        bool `json:"is_free"`
-	IsToday       bool `json:"is_today"`
-	IsTomorrow    bool `json:"is_tomorrow"`
-	IsThisWeekend bool `json:"is_this_weekend"`
-	IsThisWeek    bool `json:"is_this_week"`
-
-	PriceValue      float64   `json:"-"`
-	ParsedDate      time.Time `json:"-"`
-	DaysUntil       int       `json:"-"`
-	AlreadyHappened bool      `json:"-"`
-}
-
-func (e *Event) enrichEvent() {
-
-	e.PriceValue = parsePrice(e.Price)
-	e.IsFree = e.PriceValue == 0
-
-	parsedDate, err := parseDate(e.Date)
-	if err != nil {
-		// if date parsing fails (which it shouldn't), set defaults for date-dependent fields
-		e.ParsedDate = time.Time{}
-		e.DaysUntil = -1
-		e.DayOfWeek = ""
-		e.IsToday = false
-		e.IsTomorrow = false
-		e.IsThisWeekend = false
-		e.IsThisWeek = false
-
-		log.Printf("WARNING: could not parse date %q for event: %v", e.Date, err)
-		return
-	}
-
-	e.ParsedDate = parsedDate
-	e.AlreadyHappened = isPast(parsedDate)
-	e.DaysUntil = daysUntil(e.ParsedDate)
-	e.DayOfWeek = e.ParsedDate.Weekday().String()
-	e.IsToday = isToday(e.ParsedDate)
-	e.IsTomorrow = e.DaysUntil == 1
-	e.IsThisWeekend = isThisWeekend(e.ParsedDate)
-	e.IsThisWeek = e.DaysUntil >= 0 && e.DaysUntil <= 7
-}
-
-func (e *Event) validateEvent() (missing []string) {
-	if e.Name == "" {
-		missing = append(missing, "Name")
-	}
-	if e.Venue == "" {
-		missing = append(missing, "Venue")
-	}
-	if e.Price == "" {
-		missing = append(missing, "Price Value")
-	}
-	if e.Time == "" {
-		missing = append(missing, "Time")
-	}
-	if e.ParsedDate.IsZero() {
-		missing = append(missing, "ParsedDate")
-	}
-	return missing
-}
-
-// EventList implements sort.Interface to sort events by specified parameter
-type EventList []Event
-
-func (el EventList) Len() int      { return len(el) }
-func (el EventList) Swap(i, j int) { el[i], el[j] = el[j], el[i] }
-func (el EventList) Less(i, j int) bool {
-	return el[i].ParsedDate.Before(el[j].ParsedDate) // defaults to sort by date (soonest first)
-}
-
-func (el EventList) SortByDate() {
-	sort.Stable(el)
-}
-
-// SortByPrice sorts events by price (cheapest to most expensive) -> maybe use it, since venues don't always show price
-func (el EventList) SortByPrice() {
-	sort.SliceStable(el, func(i, j int) bool {
-		return el[i].PriceValue < el[j].PriceValue
-	})
-}
-
-// RightNow returns events still happening from 1 an hour ago, and events happening within 2 hours of current time
-func (el EventList) RightNow() (result EventList) {
-	now := time.Now().In(loc)
-
-	for _, e := range el {
-		eventStart := combineDateAndTime(e.ParsedDate, e.Time)
-		if eventStart.IsZero() {
-			continue // cant parse, skip.
-		}
-
-		// Event started up to 1 hour ago (likely still happening)
-		startedRecently := eventStart.After(now.Add(-1*time.Hour)) && eventStart.Before(now)
-
-		// Event starts within the next 2 hours
-		startsSoon := eventStart.After(now) && eventStart.Before(now.Add(2*time.Hour))
-
-		if startedRecently || startsSoon {
-			result = append(result, e)
-		}
-	}
-	return result
-}
-
-func (el EventList) Tonight() (result EventList) {
-	for _, e := range el {
-		if e.IsToday {
-			result = append(result, e)
-		}
-	}
-	return result
-}
-
-func (el EventList) Tomorrow() (result EventList) {
-	for _, e := range el {
-		if e.IsTomorrow {
-			result = append(result, e)
-		}
-	}
-	return result
-}
-
-func (el EventList) ThisWeek() (result EventList) {
-	for _, e := range el {
-		if e.IsThisWeek {
-			result = append(result, e)
-		}
-	}
-	return result
-}
-
-func (el EventList) ThisWeekend() (result EventList) {
-	for _, e := range el {
-		if e.IsThisWeekend {
-			result = append(result, e)
-		}
-	}
-	return result
-}
-
-//func (el EventList) Free() (result EventList) {
-//	for _, e := range el {
-//		if e.IsFree {
-//			result = append(result, e)
-//		}
-//	}
-//	return result
-//}
-
-// ByWeekday return events by the specified day in the day argument
-func (el EventList) ByWeekday(day time.Weekday) (result EventList) {
-	for _, e := range el {
-		if e.ParsedDate.Weekday() == day {
-			result = append(result, e)
-		}
-	}
-	return result
-}
-
-// ByVenue filters by venue
-func (el EventList) ByVenue(venueKey string) (result EventList) {
-	for _, e := range el {
-		if e.VenueKey == venueKey {
-			result = append(result, e)
-		}
-	}
-	return result
-}
-
-// GroupByVenue indexes events by VenueKey in a single pass.
-func (el EventList) GroupByVenue() map[string]EventList {
-	result := make(map[string]EventList, len(allVenues))
-	for _, e := range el {
-		result[e.VenueKey] = append(result[e.VenueKey], e)
-	}
-	return result
-}
-
-/*
-	****************************************************************************************************************
-    ****************************************** EVENT UTIL **********************************************************
-	****************************************************************************************************************
-*/
 
 var (
 	// regex to strip ordinal suffixes for date (1st, 2nd, 3rd, 4th, etc.)
@@ -212,7 +14,8 @@ var (
 	priceRegex         = regexp.MustCompile(`[\d.]+`)
 	backgroundURLRegex = regexp.MustCompile(`url\(["']?(.*?)["']?\)`)
 	timePattern        = regexp.MustCompile(`\d+h`)
-	loc, _             = time.LoadLocation("America/Montreal")
+
+	loc, _ = time.LoadLocation("America/Montreal")
 )
 
 var frenchMonthReplacer = strings.NewReplacer(
@@ -254,7 +57,7 @@ func parseDate(date string) (time.Time, error) {
 	normalized = dateOrdinalRegex.ReplaceAllString(normalized, "$1")
 	normalized = strings.TrimSpace(normalized)
 
-	layouts := []struct {
+	var layouts = []struct {
 		layout    string
 		needsYear bool
 	}{
@@ -306,11 +109,11 @@ func parseDate(date string) (time.Time, error) {
 }
 
 func stripTime(normalized string) string {
-	index := strings.Index(normalized, ",")
-	if index != -1 {
-		afterComma := normalized[index+1:]
+	before, after, ok := strings.Cut(normalized, ",")
+	if ok {
+		afterComma := after
 		if timePattern.MatchString(afterComma) || strings.Contains(afterComma, ":") {
-			return strings.TrimSpace(normalized[:index])
+			return strings.TrimSpace(before)
 		}
 	}
 	return normalized
@@ -338,7 +141,6 @@ func combineDateAndTime(date time.Time, timeStr string) time.Time {
 		return time.Time{}
 	}
 
-	// Try common formats your parsers produce
 	formats := []string{"15:04", "3:04 PM", "3PM", "3 PM"}
 
 	for _, format := range formats {
@@ -452,8 +254,8 @@ func parsePrice(priceStr string) float64 {
 // special case for Cafe Campus
 func extractAdvancePrice(text string) string {
 
-	if idx := strings.Index(text, "Prix des billets :"); idx != -1 {
-		after := text[idx+len("Prix des billets :"):]
+	if _, after, ok := strings.Cut(text, "Prix des billets :"); ok {
+		after := after
 		if end := strings.Index(after, "$"); end != -1 {
 			return strings.TrimSpace(after[:end+1])
 		}

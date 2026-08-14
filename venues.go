@@ -4,10 +4,10 @@ type Venue struct {
 	Name           string
 	Address        string
 	Neighborhood   string
-	Group          string // group related venues (multiple venues for a single website) this is rare
+	Group          string
 	Link           string
 	AllowedDomains []string
-	Selector       string // CSS selector for events on page -- Colly
+	Selector       string
 	Website        string
 
 	// interactive map values
