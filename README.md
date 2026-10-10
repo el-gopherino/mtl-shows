@@ -2,15 +2,6 @@
 
 Scrapes and serves information about live shows and events in Montreal's independent venues.
 
-## Requirements
-
-- Go 1.26.4 or later
-- Git
-
-## Getting started
-
-Clone the repo and fetch dependencies:
-
 ```sh
 git clone https://github.com/el-gopherino/mtl-shows.git
 cd mtl-shows
@@ -32,23 +23,12 @@ go run . -conc
 go run . -serve
 ```
 
-When running with `-serve`, open http://localhost:8080 in your browser. Available routes:
-
-- `/` — all events
-- `/right-now`
-- `/tonight`
-- `/tomorrow`
-- `/this-week`
-- `/this-weekend` (also `/this-weekend/friday`, `/saturday`, `/sunday`)
-
-You can also build a binary instead of using `go run`:
+- or simply:
 
 ```sh
 go build -o mtl-shows
 ./mtl-shows -serve
 ```
-
-Scraped event data is written to JSON files in the project directory (`output/`, `tonight/`, `tomorrow/`, etc.).
 
 ## Current venues scraped
 
