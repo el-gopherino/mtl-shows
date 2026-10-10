@@ -16,9 +16,8 @@ func scrapeVenue(venueKey string, venue Venue) (events EventList) {
 		colly.AllowedDomains(venue.AllowedDomains...),
 	)
 	c.OnHTML(venue.Selector, func(h *colly.HTMLElement) {
-		event, missing := parseEvent(h, venueKey)
 
-		// skip if event already happened
+		event, missing := parseEvent(h, venueKey)
 		if event.AlreadyHappened {
 			return
 		}
