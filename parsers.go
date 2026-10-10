@@ -15,9 +15,7 @@ import (
 )
 
 // TODO: update pour chaque nouvelle venue d'ajoutée dans venues.go
-func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
-	var e Event
-
+func parseEvent(h *colly.HTMLElement, venueKey string) (e Event, missing []string) {
 	switch venueKey {
 	case "casa-del-popolo", "la-sala-rossa", "la-sotterenea", "ptit-ours", "la-toscadura":
 		e = parseCasaGroup(h, venueKey)
@@ -40,17 +38,17 @@ func parseEvent(h *colly.HTMLElement, venueKey string) (Event, []string) {
 	case "olympia":
 		e = parseOlympia(h)
 	default:
-		fmt.Printf("ERROR: no parser for [%q]. Returning empty event...\n", venueKey) // should never happen
+		fmt.Printf("ERROR: no parser for [%q]. Returning empty event...\n", venueKey)
 		return Event{}, nil
 	}
-	return e, e.validateEvent()
+
+	missing = e.finalizeEvent()
+	return e, missing
 }
 
 func parseCasaGroup(h *colly.HTMLElement, venueKey string) Event {
 	children := h.DOM.Children().Filter("div")
-	eventImage := h.DOM.Parent().Find("img.object-cover").AttrOr("src", "")
-
-	e := Event{
+	return Event{
 		VenueKey:   venueKey,
 		Name:       strings.TrimSpace(children.Eq(1).Text()),
 		Date:       strings.TrimSpace(children.Eq(0).Text()),
@@ -59,10 +57,8 @@ func parseCasaGroup(h *colly.HTMLElement, venueKey string) Event {
 		Time:       strings.TrimSpace(children.Eq(3).Text()),
 		Price:      strings.TrimSpace(children.Eq(4).Text()),
 		TicketURL:  h.ChildAttr("a.btn-inverse", "href"),
-		EventImage: eventImage,
+		EventImage: h.DOM.Parent().Find("img.object-cover").AttrOr("src", ""),
 	}
-	e.enrichEvent()
-	return e
 }
 
 func parseCafeCampus(h *colly.HTMLElement) Event {
@@ -74,7 +70,7 @@ func parseCafeCampus(h *colly.HTMLElement) Event {
 	imageStyle, _ := h.DOM.Parent().Find("div.noo-thumbnail").Attr("style")
 	eventImage := extractBackgroundURL(imageStyle)
 
-	e := Event{
+	return Event{
 		VenueKey:   "cafe-campus",
 		Name:       strings.TrimSpace(h.ChildText("h4 a")),
 		Date:       date,
@@ -85,12 +81,10 @@ func parseCafeCampus(h *colly.HTMLElement) Event {
 		TicketURL:  h.ChildAttr("span.sh-address a", "href"),
 		EventImage: eventImage,
 	}
-	e.enrichEvent()
-	return e
 }
 
 func parseQuaiDesBrumes(h *colly.HTMLElement) Event {
-	e := Event{
+	return Event{
 		VenueKey:   "quai-des-brumes",
 		Name:       h.ChildText("h3.mec-event-title a"),
 		Date:       h.ChildText("span.mec-start-date-label"),
@@ -100,8 +94,6 @@ func parseQuaiDesBrumes(h *colly.HTMLElement) Event {
 		TicketURL:  h.ChildAttr("a.mec-color-hover", "href"),
 		EventImage: h.ChildAttr("div.mec-event-image img", "src"),
 	}
-	e.enrichEvent()
-	return e
 }
 
 func parsePiranhaBar(h *colly.HTMLElement) Event {
@@ -111,7 +103,7 @@ func parsePiranhaBar(h *colly.HTMLElement) Event {
 		ticketURL = "https://www.piranhabar.ca" + ticketPath
 	}
 
-	e := Event{
+	return Event{
 		VenueKey:   "piranha-bar",
 		Name:       h.ChildText("h1.eventlist-title a"),
 		Date:       strings.TrimSpace(h.DOM.Find("time.event-date").First().Text()),
@@ -121,14 +113,12 @@ func parsePiranhaBar(h *colly.HTMLElement) Event {
 		TicketURL:  ticketURL,
 		EventImage: h.ChildAttr("a.eventlist-column-thumbnail img", "src"),
 	}
-	e.enrichEvent()
-	return e
 }
 
 func parseHemisphereGauche(h *colly.HTMLElement) Event {
 	eventImage, _ := h.DOM.Parent().Find("div[data-hook=ev-list-image] img").First().Attr("src")
 
-	e := Event{
+	return Event{
 		VenueKey: "hemisphere-gauche",
 		Name:     h.ChildText("a.WFgzOI"),
 		Date:     h.ChildText("span.GiNWmM"),
@@ -138,8 +128,6 @@ func parseHemisphereGauche(h *colly.HTMLElement) Event {
 		TicketURL:  h.ChildAttr("a.DjQEyU m022zm aUkG34", "href"),
 		EventImage: eventImage,
 	}
-	e.enrichEvent()
-	return e
 }
 
 func parseVerreBouteille(h *colly.HTMLElement) Event {
@@ -161,7 +149,7 @@ func parseVerreBouteille(h *colly.HTMLElement) Event {
 	imageStyle := h.ChildAttr("div.card", "style")
 	eventImage := extractBackgroundURL(imageStyle)
 
-	e := Event{
+	return Event{
 		VenueKey:   "verre-bouteille",
 		Name:       name,
 		Venue:      "Le Verre Bouteille",
@@ -171,8 +159,6 @@ func parseVerreBouteille(h *colly.HTMLElement) Event {
 		TicketURL:  h.ChildAttr("a[href*='showInfo']", "href"),
 		EventImage: eventImage,
 	}
-	e.enrichEvent()
-	return e
 }
 
 func parseClubSoda(h *colly.HTMLElement) Event {
@@ -181,17 +167,15 @@ func parseClubSoda(h *colly.HTMLElement) Event {
 		ticketURL = "https://clubsoda.ca" + ticketURL
 	}
 
-	e := Event{
+	return Event{
 		VenueKey:   "club-soda",
 		Name:       strings.TrimSpace(h.ChildText("h2.card-title")),
-		Date:       strings.TrimSpace(h.ChildText("p.card-subtitle")),
+		Date:       strings.TrimSpace(h.ChildText("p.card-subtitle")), // todo: fix
 		Venue:      "Club Soda",
 		Address:    "1225 Boul. Saint-Laurent",
 		TicketURL:  ticketURL,
 		EventImage: h.ChildAttr("div.card-img-top img", "src"),
 	}
-	e.enrichEvent()
-	return e
 }
 
 func parseLeMinistere(h *colly.HTMLElement) Event {
@@ -200,7 +184,7 @@ func parseLeMinistere(h *colly.HTMLElement) Event {
 		ticketURL = "https://leministere.ca" + ticketURL
 	}
 
-	e := Event{
+	return Event{
 		VenueKey:   "le-ministere",
 		Name:       strings.TrimSpace(h.ChildText("h2.card-title")),
 		Date:       strings.TrimSpace(h.ChildText("p.card-subtitle")),
@@ -209,8 +193,6 @@ func parseLeMinistere(h *colly.HTMLElement) Event {
 		TicketURL:  ticketURL,
 		EventImage: h.ChildAttr("div.card-img-top img", "src"),
 	}
-	e.enrichEvent()
-	return e
 }
 
 func parseOlympia(h *colly.HTMLElement) Event {
@@ -223,8 +205,8 @@ func parseOlympia(h *colly.HTMLElement) Event {
 	// static EN page returns "show: 7:00 pm | doors: 6:00 pm".
 	rawTime := h.ChildText("span.wtb-olympia-concert_time")
 	showTime := rawTime
-	if idx := strings.Index(rawTime, "|"); idx >= 0 {
-		showTime = rawTime[:idx]
+	if before, _, ok := strings.Cut(rawTime, "|"); ok {
+		showTime = before
 	}
 	showTime = strings.TrimSpace(showTime)
 	showTime = strings.TrimPrefix(showTime, "spectacle:")
@@ -234,7 +216,7 @@ func parseOlympia(h *colly.HTMLElement) Event {
 	showTime = strings.ReplaceAll(showTime, "pm", "PM")
 	showTime = strings.ReplaceAll(showTime, "am", "AM")
 
-	e := Event{
+	return Event{
 		VenueKey:   "olympia",
 		Name:       strings.TrimSpace(h.ChildText("h2.wtb-olympia-concert_name")),
 		Venue:      "L'Olympia",
@@ -245,8 +227,6 @@ func parseOlympia(h *colly.HTMLElement) Event {
 		TicketURL:  h.ChildAttr("div.wtb-olympia-concert_tickets div.wtb-olympia-btn-wrap a", "href"),
 		EventImage: h.ChildAttr("div.wtb-olympia-concert_image img", "src"),
 	}
-	e.enrichEvent()
-	return e
 }
 
 // scrapeOlympiaAJAX paginates L'Olympia's WP "programmation" AJAX endpoint.
@@ -278,7 +258,7 @@ func scrapeOlympiaAJAX() (events EventList) {
 	})
 
 	const maxPages = 50 // safety cap; site currently has ~8 pages
-	for page := 0; page < maxPages; page++ {
+	for page := range maxPages {
 		cardsThisPage = 0
 		err := c.Post(OlympiaAjaxURL, map[string]string{
 			"action":        "programmation",
@@ -306,7 +286,7 @@ func parseFairmountTheatre(h *colly.HTMLElement) Event {
 	showTime = strings.ReplaceAll(showTime, "p.m.", "PM")
 	showTime = strings.ReplaceAll(showTime, "a.m.", "AM")
 
-	e := Event{
+	return Event{
 		VenueKey:   "fairmount-theatre",
 		Name:       strings.TrimSpace(h.DOM.Find("div.eventlist-description h2").First().Text()),
 		Date:       strings.TrimSpace(h.DOM.Find("time.event-date").First().Text()),
@@ -316,8 +296,6 @@ func parseFairmountTheatre(h *colly.HTMLElement) Event {
 		TicketURL:  h.DOM.Find("div.sqs-block-button-container a.sqs-block-button-element").First().AttrOr("href", ""),
 		EventImage: h.DOM.Find("a.eventlist-column-thumbnail img").First().AttrOr("src", ""),
 	}
-	e.enrichEvent()
-	return e
 }
 
 type turboHausResponse struct {
@@ -369,8 +347,15 @@ func scrapeTurboHausJSON() (events EventList) {
 	events = make(EventList, 0, len(th.Docs))
 	for _, item := range th.Docs {
 		e, ok := convertTurboHausEvent(item)
-		if !ok || e.AlreadyHappened {
+		if !ok {
 			continue
+		}
+		missing := e.finalizeEvent()
+		if e.AlreadyHappened {
+			continue
+		}
+		if len(missing) > 0 {
+			fmt.Printf("\t[turbo-haus]: missing: %v\n", strings.Join(missing, ", "))
 		}
 		events = append(events, e)
 	}
@@ -419,7 +404,6 @@ func convertTurboHausEvent(item turboHausEvent) (Event, bool) {
 		TicketURL:  ticketURL,
 		EventImage: image,
 	}
-	e.enrichEvent()
 	return e, true
 }
 
@@ -454,8 +438,12 @@ func scrapeBarLeRitzJSON() (events EventList) {
 	events = make(EventList, 0, len(allItems))
 	for _, item := range allItems {
 		e := convertBarLeRitzItem(item)
+		missing := e.finalizeEvent()
 		if e.AlreadyHappened {
 			continue
+		}
+		if len(missing) > 0 {
+			fmt.Printf("\t[bar-le-ritz]: missing: %v\n", strings.Join(missing, ", "))
 		}
 		events = append(events, e)
 	}
@@ -477,7 +465,6 @@ func convertBarLeRitzItem(item squarespaceItem) Event {
 		TicketURL:  "https://www.barleritzpdb.com" + item.FullURL,
 		EventImage: item.AssetURL,
 	}
-	e.enrichEvent()
 	return e
 }
 
@@ -564,6 +551,7 @@ func scrapeMTelusJSON() (events EventList) {
 		}
 
 		body, err := io.ReadAll(resp.Body)
+
 		resp.Body.Close()
 		if err != nil {
 			log.Printf("[mtelus] failed to read body (page %d): %v", page, err)
@@ -591,8 +579,12 @@ func scrapeMTelusJSON() (events EventList) {
 	events = make(EventList, 0, len(allHits))
 	for _, hit := range allHits {
 		e := convertMTelusHit(hit)
+		missing := e.finalizeEvent()
 		if e.AlreadyHappened {
 			continue
+		}
+		if len(missing) > 0 {
+			fmt.Printf("\t[mtelus]: missing: %v\n", strings.Join(missing, ", "))
 		}
 		events = append(events, e)
 	}
@@ -618,7 +610,7 @@ func convertMTelusHit(hit mtelusHit) Event {
 
 	ticketURL := fmt.Sprintf("https://mtelus.com/en/events/mtelus/%s", hit.Slug)
 
-	e := Event{
+	return Event{
 		VenueKey:   "mtelus",
 		Name:       hit.Title,
 		Venue:      "MTelus",
@@ -628,6 +620,4 @@ func convertMTelusHit(hit mtelusHit) Event {
 		TicketURL:  ticketURL,
 		EventImage: thumbnail,
 	}
-	e.enrichEvent()
-	return e
 }

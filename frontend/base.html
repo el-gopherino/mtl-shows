@@ -236,7 +236,7 @@
     <div class="events-grid">
     {{range .Events}}
     <div class="event{{if .IsToday}} event-today{{else if .IsThisWeek}} event-week{{end}}">
-        {{if .EventImage}}<img src="{{.EventImage}}" alt="{{.Name}}">{{end}}
+        {{if .EventImage}}<img src="{{.EventImage}}" alt="{{.Name}}" loading="lazy" decoding="async">{{end}}
         <h3>{{.Name}}</h3>
         <p>{{.Venue}} — {{.Address}}</p>
         <p class="event-when">{{.Date}} · {{.Time}}</p>

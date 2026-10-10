@@ -51,13 +51,17 @@ var frenchDayReplacer = strings.NewReplacer(
 )
 
 func parseDate(date string) (time.Time, error) {
+	return parseDateWithYearHint(date, 0)
+}
+
+func parseDateWithYearHint(date string, yearHint int) (time.Time, error) {
 
 	normalized := strings.ToLower(translateMonth(date))
 	normalized = frenchDayReplacer.Replace(normalized)
 	normalized = dateOrdinalRegex.ReplaceAllString(normalized, "$1")
 	normalized = strings.TrimSpace(normalized)
 
-	var layouts = []struct {
+	layouts := []struct {
 		layout    string
 		needsYear bool
 	}{
@@ -91,8 +95,12 @@ func parseDate(date string) (time.Time, error) {
 		t, err := time.ParseInLocation(l.layout, normalized, loc)
 		if err == nil {
 			if l.needsYear {
+				year := yearHint
+				if year == 0 {
+					year = inferYear(t)
+				}
 				t = time.Date(
-					inferYear(t),
+					year,
 					t.Month(),
 					t.Day(),
 					0,
@@ -106,6 +114,34 @@ func parseDate(date string) (time.Time, error) {
 		}
 	}
 	return time.Time{}, fmt.Errorf("unable to parse date: %q (normalized: %q)", date, normalized)
+}
+
+var dateRangeRegex = regexp.MustCompile(`(?i)^(.+?)\s+au\s+(.+)$`)
+
+func parseDateRange(date string) (start, end time.Time, err error) {
+	if m := dateRangeRegex.FindStringSubmatch(strings.TrimSpace(date)); m != nil {
+		startRaw, endRaw := strings.TrimSpace(m[1]), strings.TrimSpace(m[2])
+
+		end, err = parseDate(endRaw)
+		if err != nil {
+			return time.Time{}, time.Time{}, fmt.Errorf("parsing range end %q: %w", endRaw, err)
+		}
+
+		start, err = parseDateWithYearHint(startRaw, end.Year())
+		if err != nil {
+			return time.Time{}, time.Time{}, fmt.Errorf("parsing range start %q: %w", startRaw, err)
+		}
+		if start.After(end) {
+			start = time.Date(start.Year()-1, start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+		}
+		return start, end, nil
+	}
+
+	t, err := parseDate(date)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+	return t, t, nil
 }
 
 func stripTime(normalized string) string {
@@ -141,8 +177,8 @@ func combineDateAndTime(date time.Time, timeStr string) time.Time {
 		return time.Time{}
 	}
 
+	// common possible time formats
 	formats := []string{"15:04", "3:04 PM", "3PM", "3 PM"}
-
 	for _, format := range formats {
 		t, err := time.Parse(format, timeStr)
 		if err == nil {
@@ -152,7 +188,6 @@ func combineDateAndTime(date time.Time, timeStr string) time.Time {
 			)
 		}
 	}
-
 	return time.Time{} // couldn't parse time
 }
 
@@ -169,17 +204,14 @@ func convertFrenchTime(t string) string {
 	if len(parts) != 2 {
 		return t
 	}
-
 	hour, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return t
 	}
-
 	minute := parts[1]
 	if minute == "" {
 		minute = "00"
 	}
-
 	period := "AM"
 	if hour >= 12 {
 		period = "PM"
@@ -190,14 +222,12 @@ func convertFrenchTime(t string) string {
 	if hour == 0 {
 		hour = 12
 	}
-
 	return fmt.Sprintf("%d:%s %s", hour, minute, period)
 }
 
 func inferYear(t time.Time) int {
 	now := time.Now()
 	year := now.Year()
-
 	if now.Month() >= time.November && t.Month() <= time.February {
 		return year + 1
 	}
@@ -206,7 +236,6 @@ func inferYear(t time.Time) int {
 
 func daysUntil(eventDate time.Time) int {
 	now := time.Now()
-
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	eventDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, now.Location())
 
@@ -231,29 +260,25 @@ func isToday(t time.Time) bool {
 func isThisWeekend(t time.Time) bool {
 	day := t.Weekday()
 	isWeekendDay := day == time.Friday || day == time.Saturday || day == time.Sunday
-	days := daysUntil(t)
-	return isWeekendDay && days >= 0 && days <= 7
+	return isWeekendDay && daysUntil(t) >= 0 && daysUntil(t) <= 7
 }
 
-// parsePrice parses a price string to a float64 value
-func parsePrice(priceStr string) float64 {
+// parsePrice parses a price string to float64
+func parsePrice(priceStr string) (price float64) {
 	priceStr = strings.ToLower(priceStr)
 	if strings.Contains(priceStr, "free") || strings.Contains(priceStr, "gratuit") {
 		return 0
 	}
-
 	match := priceRegex.FindString(priceStr)
 	if match == "" {
 		return 0
 	}
-
-	price, _ := strconv.ParseFloat(match, 64)
+	price, _ = strconv.ParseFloat(match, 64)
 	return price
 }
 
 // special case for Cafe Campus
 func extractAdvancePrice(text string) string {
-
 	if _, after, ok := strings.Cut(text, "Prix des billets :"); ok {
 		after := after
 		if end := strings.Index(after, "$"); end != -1 {

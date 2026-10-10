@@ -6,7 +6,7 @@ import (
 )
 
 type Event struct {
-	VenueKey   string `json:"venue_key"` // key for venue map
+	VenueKey   string `json:"venue_key"`
 	Name       string `json:"name"`
 	Venue      string `json:"venue"`
 	Date       string `json:"date"`
@@ -16,6 +16,7 @@ type Event struct {
 	TicketURL  string `json:"ticket_url,omitempty"`
 	EventImage string `json:"event_image,omitempty"`
 	DayOfWeek  string `json:"day_of_week"`
+	Genre      string `json:"genre,omitempty"`
 
 	IsFree        bool `json:"is_free"`
 	IsToday       bool `json:"is_today"`
@@ -25,19 +26,23 @@ type Event struct {
 
 	PriceValue      float64   `json:"-"`
 	ParsedDate      time.Time `json:"-"`
+	ParsedEndDate   time.Time `json:"-"`
 	DaysUntil       int       `json:"-"`
 	AlreadyHappened bool      `json:"-"`
 }
 
 func (e *Event) enrichEvent() {
-
 	e.PriceValue = parsePrice(e.Price)
-	e.IsFree = e.PriceValue == 0
 
-	parsedDate, err := parseDate(e.Date)
+	if e.PriceValue == 0 {
+		e.IsFree = true
+	}
+
+	start, end, err := parseDateRange(e.Date)
 	if err != nil {
 		// if date parsing fails (which it shouldn't), set defaults for date-dependent fields
 		e.ParsedDate = time.Time{}
+		e.ParsedEndDate = time.Time{}
 		e.DaysUntil = -1
 		e.DayOfWeek = ""
 		e.IsToday = false
@@ -49,27 +54,41 @@ func (e *Event) enrichEvent() {
 		return
 	}
 
-	e.ParsedDate = parsedDate
-	e.AlreadyHappened = isPast(parsedDate)
+	e.ParsedDate = start
+	e.ParsedEndDate = end
+	e.AlreadyHappened = isPast(end)
 	e.DaysUntil = daysUntil(e.ParsedDate)
-	e.DayOfWeek = e.ParsedDate.Weekday().String()
-	e.IsToday = isToday(e.ParsedDate)
-	e.IsTomorrow = e.DaysUntil == 1
-	e.IsThisWeekend = isThisWeekend(e.ParsedDate)
-	e.IsThisWeek = e.DaysUntil >= 0 && e.DaysUntil <= 7
+	e.DayOfWeek = start.Weekday().String()
+
+	daysUntilStart := e.DaysUntil
+	daysUntilEnd := daysUntil(end)
+
+	e.IsToday = daysUntilStart <= 0 && daysUntilEnd >= 0
+	e.IsTomorrow = daysUntilStart <= 1 && daysUntilEnd >= 1
+	e.IsThisWeek = daysUntilStart <= 7 && daysUntilEnd >= 0
+
+	e.IsThisWeekend = isThisWeekend(start) || isThisWeekend(end) ||
+		(e.IsToday && isThisWeekend(time.Now().In(loc)))
 }
 
-func (e *Event) validateEvent() (missing []string) {
-	switch {
-	case e.Name == "":
+// finalizeEvent is the single post-parse step every venue goes through:
+// it computes the derived fields and reports which required fields are missing.
+func (e *Event) finalizeEvent() (missing []string) {
+	e.enrichEvent()
+
+	if e.Name == "" {
 		missing = append(missing, "Name")
-	case e.Venue == "":
+	}
+	if e.Venue == "" {
 		missing = append(missing, "Venue")
-	case e.Price == "":
+	}
+	if e.Price == "" {
 		missing = append(missing, "Price Value")
-	case e.Time == "":
+	}
+	if e.Time == "" {
 		missing = append(missing, "Time")
-	case e.ParsedDate.IsZero():
+	}
+	if e.ParsedDate.IsZero() {
 		missing = append(missing, "ParsedDate")
 	}
 	return missing
